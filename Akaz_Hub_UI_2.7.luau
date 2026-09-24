@@ -432,6 +432,48 @@ local function normalizeAssetId(value)
     return id and ("rbxassetid://" .. id) or DEFAULT_LOGO
 end
 
+local function resolveExternalImage(value, cacheName, fallback)
+    local asset = tostring(value or "")
+    if asset == "" then return fallback or asset end
+
+    -- Roblox normally wants rbxassetid:// or an executor custom asset for ImageLabel.
+    -- For remote PNG URLs, cache the file and use getcustomasset/getsynasset when available.
+    if string.match(asset, "^https?://") then
+        local loader = (typeof(getcustomasset) == "function" and getcustomasset)
+            or (typeof(getsynasset) == "function" and getsynasset)
+        local canWrite = typeof(writefile) == "function"
+        local canRead = typeof(readfile) == "function"
+        local canIsFile = typeof(isfile) == "function"
+        if loader and canWrite and canRead and canIsFile then
+            local dir = "AkazHub/assets"
+            local path = dir .. "/" .. tostring(cacheName or "asset.png")
+            pcall(function()
+                if typeof(isfolder) == "function" and typeof(makefolder) == "function" and not isfolder("AkazHub") then
+                    makefolder("AkazHub")
+                end
+                if typeof(isfolder) == "function" and typeof(makefolder) == "function" and not isfolder(dir) then
+                    makefolder(dir)
+                end
+            end)
+            local okFile = pcall(function()
+                if not isfile(path) or #readfile(path) < 16 then
+                    local body = game:HttpGet(asset)
+                    assert(type(body) == "string" and #body > 16, "empty image response")
+                    writefile(path, body)
+                end
+            end)
+            if okFile then
+                local okAsset, custom = pcall(loader, path)
+                if okAsset and custom and custom ~= "" then
+                    return custom
+                end
+            end
+        end
+    end
+
+    return fallback or asset
+end
+
 local function resolveIcon(value)
     if value == nil or value == "" then return nil, nil end
     local str = tostring(value)
@@ -1933,14 +1975,15 @@ function Library:CreateWindow(opts)
     -- Auto-start the tag system
     startTagSystem()
 
-    local logoAsset      = normalizeAssetId(opts.Logo or DEFAULT_LOGO)
+    local logoSource     = opts.Logo or DEFAULT_LOGO
+    local logoAsset      = resolveExternalImage(logoSource, "akaz_logo.png", normalizeAssetId(logoSource))
     -- Zoom factor applied to the logo inside its clipping holder. The Akaz asset
     -- is a square canvas whose mark covers ~71% of the width and ~80% of the
     -- height, so 1.1 lands it at ~88% of the holder without cropping any of it
     -- (the old padded asset needed 2.4 for the same visual size). Callers with
     -- their own asset get no zoom, since those are assumed cropped already;
     -- `LogoZoom` overrides either case.
-    local logoZoom       = math.clamp(tonumber(opts.LogoZoom) or (logoAsset == DEFAULT_LOGO and 1.1 or 1), 1, 6)
+    local logoZoom       = math.clamp(tonumber(opts.LogoZoom) or (logoSource == DEFAULT_LOGO and 1.1 or 1), 1, 6)
     local windowSize     = opts.Size or UDim2.fromOffset(700, 490)
     local windowPosition = opts.Position or UDim2.fromScale(0.5, 0.5)
     local guiName        = opts.GuiName or "AkazHubUI"
@@ -2515,25 +2558,51 @@ function Library:CreateWindow(opts)
     brandShimmerGradient:SetAttribute("ThemeGradient_Edge", "Accent")
     -- The logo holder clips, and the image inside is scaled by `logoZoom`, so
     -- the Akaz mark lands at ~88% of this box without any of it being cut off.
-    local logoHolder = make("Frame", { Position=UDim2.fromOffset(11,12), Size=UDim2.fromOffset(44,44), BackgroundTransparency=1, ClipsDescendants=false, Parent=brand })
-    local brandLogo = make("ImageLabel",{Name="Logo",Image=logoAsset,BackgroundTransparency=1,AnchorPoint=Vector2.new(0.5,0.5),Position=UDim2.fromScale(0.5,0.5),Size=UDim2.fromScale(logoZoom,logoZoom),ResampleMode=Enum.ResamplerMode.Default,ScaleType=Enum.ScaleType.Fit,ImageColor3=Color3.fromRGB(255,255,255),ImageTransparency=0,Parent=logoHolder})
+    local logoHolder = make("Frame", {
+        Name="AkazLogoHolder", Position=UDim2.fromOffset(10,10), Size=UDim2.fromOffset(48,44),
+        BackgroundTransparency=1, ClipsDescendants=false, Parent=brand,
+    })
+    local brandLogo = make("ImageLabel", {
+        Name="Logo", Image=logoAsset, BackgroundTransparency=1,
+        AnchorPoint=Vector2.new(0.5,0.5), Position=UDim2.fromScale(0.5,0.5),
+        Size=UDim2.fromOffset(44,44), ResampleMode=Enum.ResamplerMode.Default,
+        ScaleType=Enum.ScaleType.Fit, ImageColor3=Color3.fromRGB(255,255,255), ImageTransparency=0,
+        Parent=logoHolder,
+    })
     make("TextLabel",{Text=opts.Name or "Akaz Hub",Font=Enum.Font.GothamBold,TextSize=13,TextColor3=C.White,TextXAlignment=Enum.TextXAlignment.Left,TextTruncate=Enum.TextTruncate.AtEnd,BackgroundTransparency=1,Position=UDim2.fromOffset(58,16),Size=UDim2.new(1,-66,0,17),Parent=brand})
     make("TextLabel",{Text=opts.BrandSubtitle or ("AKAZ HUB • v"..Library.Version),Font=Enum.Font.GothamMedium,TextSize=9,TextColor3=C.TextDim,TextXAlignment=Enum.TextXAlignment.Left,TextTruncate=Enum.TextTruncate.AtEnd,BackgroundTransparency=1,Position=UDim2.fromOffset(58,35),Size=UDim2.new(1,-66,0,13),Parent=brand})
 
-    -- Player mini-card (fills the sidebar and gives identity at a glance)
+    -- Player mini-card: identity only. Discord is deliberately outside this card,
+    -- directly underneath the name/tag area rather than inside the name tag block.
     local lp = Players.LocalPlayer
-    local pcard = make("Frame",{Name="PlayerCard",Position=UDim2.fromOffset(12,88),Size=UDim2.new(1,-24,0,76),BackgroundColor3=C.CardBg,Parent=sidebar})
+    local pcard = make("Frame", {
+        Name="PlayerCard", Position=UDim2.fromOffset(12,88), Size=UDim2.new(1,-24,0,54),
+        BackgroundColor3=C.CardBg, Parent=sidebar,
+    })
     corner(pcard,10); stroke(pcard,C.Border)
-    local avH = make("Frame",{Position=UDim2.fromOffset(8,20),Size=UDim2.fromOffset(36,36),BackgroundColor3=C.Element,Parent=pcard}); corner(avH,8)
+    local avH = make("Frame",{Position=UDim2.fromOffset(8,9),Size=UDim2.fromOffset(36,36),BackgroundColor3=C.Element,Parent=pcard}); corner(avH,8)
     local avImg = make("ImageLabel",{Image="rbxthumb://type=AvatarHeadShot&id="..lp.UserId.."&w=150&h=150",BackgroundTransparency=1,Size=UDim2.fromScale(1,1),ScaleType=Enum.ScaleType.Crop,Parent=avH}); corner(avImg,8)
     local avRing = stroke(avH,C.Accent); avRing.Transparency=0.4
-    make("TextLabel",{Text=lp.DisplayName,Font=Enum.Font.GothamBold,TextSize=12,TextColor3=C.White,TextXAlignment=Enum.TextXAlignment.Left,TextTruncate=Enum.TextTruncate.AtEnd,BackgroundTransparency=1,Position=UDim2.fromOffset(52,9),Size=UDim2.new(1,-60,0,15),Parent=pcard})
+    make("TextLabel",{Text=lp.DisplayName,Font=Enum.Font.GothamBold,TextSize=12,TextColor3=C.White,TextXAlignment=Enum.TextXAlignment.Left,TextTruncate=Enum.TextTruncate.AtEnd,BackgroundTransparency=1,Position=UDim2.fromOffset(52,8),Size=UDim2.new(1,-60,0,15),Parent=pcard})
     make("TextLabel",{Text="@"..lp.Name,Font=Enum.Font.Gotham,TextSize=10,TextColor3=C.TextDim,TextXAlignment=Enum.TextXAlignment.Left,TextTruncate=Enum.TextTruncate.AtEnd,BackgroundTransparency=1,Position=UDim2.fromOffset(52,27),Size=UDim2.new(1,-60,0,13),Parent=pcard})
 
-    local discordBtn = make("TextButton",{Name="DiscordButton",Text="",AutoButtonColor=false,Position=UDim2.fromOffset(50,45),Size=UDim2.new(1,-58,0,22),BackgroundColor3=C.Element,Parent=pcard})
-    corner(discordBtn,6); stroke(discordBtn,C.Border)
-    local discordIcon = make("ImageLabel",{Image=AKAZ_DISCORD_LOGO_URL,BackgroundTransparency=1,Position=UDim2.fromOffset(6,4),Size=UDim2.fromOffset(14,14),ScaleType=Enum.ScaleType.Fit,ImageColor3=C.White,Parent=discordBtn})
-    local discordLabel = make("TextLabel",{Text="Discord",Font=Enum.Font.GothamMedium,TextSize=10,TextColor3=C.TextGray,TextXAlignment=Enum.TextXAlignment.Left,BackgroundTransparency=1,Position=UDim2.fromOffset(25,0),Size=UDim2.new(1,-31,1,0),Parent=discordBtn})
+    local discordAsset = resolveExternalImage(AKAZ_DISCORD_LOGO_URL, "discord_logo.png", "")
+    local discordBtn = make("TextButton",{
+        Name="DiscordButton",Text="",AutoButtonColor=false,
+        Position=UDim2.fromOffset(12,148),Size=UDim2.new(1,-24,0,28),
+        BackgroundColor3=C.Element,Parent=sidebar,
+    })
+    corner(discordBtn,7); stroke(discordBtn,C.Border)
+    local discordIcon = make("ImageLabel",{
+        Image=discordAsset,BackgroundTransparency=1,Position=UDim2.fromOffset(7,5),
+        Size=UDim2.fromOffset(18,18),ScaleType=Enum.ScaleType.Fit,
+        ResampleMode=Enum.ResamplerMode.Default,ImageColor3=C.White,Parent=discordBtn,
+    })
+    local discordLabel = make("TextLabel",{
+        Text="Discord",Font=Enum.Font.GothamMedium,TextSize=10,TextColor3=C.TextGray,
+        TextXAlignment=Enum.TextXAlignment.Left,BackgroundTransparency=1,
+        Position=UDim2.fromOffset(31,0),Size=UDim2.new(1,-38,1,0),Parent=discordBtn,
+    })
     discordBtn.MouseEnter:Connect(function()
         tween(discordBtn,{BackgroundColor3=C.ElementHover})
         tween(discordLabel,{TextColor3=C.White})

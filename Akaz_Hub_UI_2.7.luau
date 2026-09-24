@@ -20,113 +20,162 @@ local PROFILE_TWEEN = TweenInfo.new(0.32, Enum.EasingStyle.Quart, Enum.EasingDir
 -- ════════════════════════════════════════════════════════════════════════════
 -- BUILT-IN ICON LIBRARY
 -- ════════════════════════════════════════════════════════════════════════════
+local ICONPACK_SOURCE = "https://raw.githubusercontent.com/xxpwnxxx420lord/Scripts/refs/heads/main/iconpack.lua"
+
+-- Icon IDs are sourced from the supplied iconpack.lua.
+-- The pack uses Roblox asset IDs, which keeps the UI icons crisp and consistent.
 local ICONS = {
-    home            = "rbxassetid://4562959382",
-    dashboard       = "rbxassetid://115870883170035",
-    search          = "rbxassetid://18733177504",
-    settings        = "rbxassetid://4738901432",
-    gear            = "rbxassetid://117427252698455",
-    menu            = "rbxassetid://10734896206",
-    list            = "rbxassetid://10709790373",
-    grid            = "rbxassetid://10734950309",
-    sliders         = "rbxassetid://10734897102",
-    swords          = "rbxassetid://10747384394",
-    sword           = "rbxassetid://10747384394",
-    combat          = "rbxassetid://10747384394",
-    shield          = "rbxassetid://98206735878224",
-    target          = "rbxassetid://123292899197910",
-    crosshair       = "rbxassetid://10723434538",
-    aim             = "rbxassetid://10723434538",
-    bolt            = "rbxassetid://79160363518966",
-    lightning       = "rbxassetid://125222658692748",
-    zap             = "rbxassetid://79160363518966",
-    fire            = "rbxassetid://10723415285",
-    flame           = "rbxassetid://10723415285",
-    star            = "rbxassetid://10734924532",
-    sparkle         = "rbxassetid://10723422246",
-    player          = "rbxassetid://82179723353246",
-    user            = "rbxassetid://10747387118",
-    person          = "rbxassetid://77052607579460",
-    users           = "rbxassetid://10747387298",
-    team            = "rbxassetid://10747387298",
-    group           = "rbxassetid://10747387298",
-    eye             = "rbxassetid://131012605615689",
-    visible         = "rbxassetid://10709790644",
-    visuals         = "rbxassetid://10709790644",
-    render          = "rbxassetid://10709790644",
-    esp             = "rbxassetid://10709790644",
-    eyeoff          = "rbxassetid://10709790497",
-    hidden          = "rbxassetid://10709790497",
-    globe           = "rbxassetid://13567318216",
-    world           = "rbxassetid://10709778567",
-    compass         = "rbxassetid://10709790373",
-    map             = "rbxassetid://84513890895579",
-    move            = "rbxassetid://10723422998",
-    arrows          = "rbxassetid://10723422998",
-    heart           = "rbxassetid://10723415389",
-    like            = "rbxassetid://10723415389",
-    bell            = "rbxassetid://10723345067",
-    notification    = "rbxassetid://10723345067",
-    alert           = "rbxassetid://10723345067",
-    info            = "rbxassetid://10723415389",
-    about           = "rbxassetid://10723415389",
-    help            = "rbxassetid://10723415389",
-    warning         = "rbxassetid://10747387522",
-    caution         = "rbxassetid://10747387522",
-    check           = "rbxassetid://5180860280",
-    checkmark       = "rbxassetid://5180860280",
-    lock            = "rbxassetid://10723417148",
-    unlock          = "rbxassetid://10723422607",
-    power           = "rbxassetid://10723422754",
-    toggle          = "rbxassetid://10723422754",
-    refresh         = "rbxassetid://10723417783",
-    folder          = "rbxassetid://10709791437",
-    file            = "rbxassetid://10709791258",
-    save            = "rbxassetid://10709791258",
-    download        = "rbxassetid://10709790497",
-    clipboard       = "rbxassetid://10709751190",
-    play            = "rbxassetid://10723422607",
-    music           = "rbxassetid://10723421745",
-    volume          = "rbxassetid://10723421745",
-    camera          = "rbxassetid://10709778567",
-    image           = "rbxassetid://10709791437",
-    clock           = "rbxassetid://10723345037",
-    time            = "rbxassetid://10723345037",
-    timer           = "rbxassetid://10723345037",
-    wrench          = "rbxassetid://100244385350031",
-    tool            = "rbxassetid://10734950309",
-    code            = "rbxassetid://10709751190",
-    terminal        = "rbxassetid://10709751190",
-    script          = "rbxassetid://10709751190",
-    bug             = "rbxassetid://10723415903",
-    debug           = "rbxassetid://10723415903",
-    layers          = "rbxassetid://10723417148",
-    inventory       = "rbxassetid://14118896735",
-    backpack        = "rbxassetid://10723415285",
-    box             = "rbxassetid://10723415285",
-    package         = "rbxassetid://10723415285",
-    gift            = "rbxassetid://10723415389",
-    crown           = "rbxassetid://10734924532",
-    gem             = "rbxassetid://10723421745",
-    coin            = "rbxassetid://13522871708",
-    magic           = "rbxassetid://11111111111",
-    wand            = "rbxassetid://10734924532",
-    potion          = "rbxassetid://10723415285",
-    skull           = "rbxassetid://10747384394",
-    death           = "rbxassetid://10747384394",
-    gamepad         = "rbxassetid://10723422998",
-    controller      = "rbxassetid://10723422998",
-    teleport        = "rbxassetid://10090587519",
-    speed           = "rbxassetid://11111111111",
-    running         = "rbxassetid://10723422998",
-    favorite        = "rbxassetid://10734924532",
+    home            = "rbxassetid://76201794045889",   -- house
+    dashboard       = "rbxassetid://135778340622118",  -- layout-dashboard
+    search          = "rbxassetid://91945241943601",   -- search
+    settings        = "rbxassetid://133220441796193",  -- settings
+    gear            = "rbxassetid://96558156857413",   -- settings-2
+    menu            = "rbxassetid://96553995054331",   -- menu
+    list            = "rbxassetid://74855969717709",   -- list
+    grid            = "rbxassetid://98214291143480",   -- layout-grid
+    sliders         = "rbxassetid://123876321379439",  -- sliders-horizontal
+    swords          = "rbxassetid://101454174088778",  -- swords
+    sword           = "rbxassetid://105666445812762",  -- sword
+    combat          = "rbxassetid://101454174088778",
+    shield          = "rbxassetid://129838924496395",  -- shield
+    target          = "rbxassetid://135691454830657",  -- target
+    crosshair       = "rbxassetid://87144352307029",   -- crosshair
+    aim             = "rbxassetid://87144352307029",
+    bolt            = "rbxassetid://78903857382511",   -- bolt
+    lightning       = "rbxassetid://78903857382511",
+    zap             = "rbxassetid://78903857382511",
+    fire            = "rbxassetid://100387296039230",  -- flame
+    flame           = "rbxassetid://100387296039230",
+    star            = "rbxassetid://101421323940034",  -- star
+    sparkle         = "rbxassetid://130375878847546",  -- sparkle
+    player          = "rbxassetid://115081745706227",  -- user
+    user            = "rbxassetid://115081745706227",
+    person          = "rbxassetid://128632166110674",  -- person-standing
+    users           = "rbxassetid://115802506829292",
+    team            = "rbxassetid://115802506829292",
+    group           = "rbxassetid://119111776314954",
+    eye             = "rbxassetid://111545834461192",
+    visible         = "rbxassetid://111545834461192",
+    visuals         = "rbxassetid://111545834461192",
+    render          = "rbxassetid://111545834461192",
+    esp             = "rbxassetid://111545834461192",
+    eyeoff          = "rbxassetid://101937481624072",
+    hidden          = "rbxassetid://101937481624072",
+    globe           = "rbxassetid://92212450589588",
+    world           = "rbxassetid://113348236955169",
+    compass         = "rbxassetid://128758269076563",
+    map             = "rbxassetid://127720087698836",
+    move            = "rbxassetid://73317711159234",
+    arrows          = "rbxassetid://73317711159234",
+    heart           = "rbxassetid://86002618026030",
+    like            = "rbxassetid://86002618026030",
+    bell            = "rbxassetid://123130994927055",
+    notification    = "rbxassetid://123130994927055",
+    alert           = "rbxassetid://72204937258553",
+    info            = "rbxassetid://126633647239092",
+    about           = "rbxassetid://126633647239092",
+    help            = "rbxassetid://126633647239092",
+    warning         = "rbxassetid://124509031427373",
+    caution         = "rbxassetid://124509031427373",
+    check           = "rbxassetid://93912665739148",
+    checkmark       = "rbxassetid://93912665739148",
+    lock            = "rbxassetid://94511696014400",
+    unlock          = "rbxassetid://128126709887118",
+    power           = "rbxassetid://131204589299088",
+    toggle          = "rbxassetid://131204589299088",
+    refresh         = "rbxassetid://95894749312708",
+    folder          = "rbxassetid://74468149216972",
+    file            = "rbxassetid://130100423122751",
+    save            = "rbxassetid://130100423122751",
+    download        = "rbxassetid://91190904673424",
+    clipboard       = "rbxassetid://112050833024598",
+    play            = "rbxassetid://109039889229614",
+    music           = "rbxassetid://108457675590893",
+    volume          = "rbxassetid://106970139826695",
+    camera          = "rbxassetid://98791383245014",
+    image           = "rbxassetid://95363568397236",
+    clock           = "rbxassetid://74192896732547",
+    time            = "rbxassetid://74192896732547",
+    timer           = "rbxassetid://96981369974177",
+    wrench          = "rbxassetid://115289920652097",
+    tool            = "rbxassetid://850089404",
+    code            = "rbxassetid://113882494754985",
+    terminal        = "rbxassetid://126365458678145",
+    script          = "rbxassetid://113882494754985",
+    bug             = "rbxassetid://84630028414530",
+    debug           = "rbxassetid://84630028414530",
+    layers          = "rbxassetid://79332487729164",
+    inventory       = "rbxassetid://117589225473403",
+    backpack        = "rbxassetid://117589225473403",
+    box             = "rbxassetid://120480840237346",
+    package         = "rbxassetid://127438198290074",
+    gift            = "rbxassetid://132134867818905",
+    crown           = "rbxassetid://82713747993935",
+    gem             = "rbxassetid://119885288633197",
+    coin            = "rbxassetid://131492848525143",
+    magic           = "rbxassetid://102117982047777",
+    wand            = "rbxassetid://102117982047777",
+    potion          = "rbxassetid://136034291975821",
+    skull           = "rbxassetid://138085898063966",
+    death           = "rbxassetid://138085898063966",
+    gamepad         = "rbxassetid://78471907943373",
+    controller      = "rbxassetid://78471907943373",
+    teleport        = "rbxassetid://73870456721300",
+    speed           = "rbxassetid://120567249015874",
+    running         = "rbxassetid://73317711159234",
+    favorite        = "rbxassetid://101421323940034",
+
+    -- Exact iconpack.lua names (so AddTab({Icon = "..."}) can use the pack directly).
+    ["layout-dashboard"] = "rbxassetid://135778340622118",
+    ["layout-grid"]     = "rbxassetid://98214291143480",
+    ["layout-list"]     = "rbxassetid://78945675059887",
+    ["sliders-horizontal"] = "rbxassetid://123876321379439",
+    ["refresh-cw"]      = "rbxassetid://95894749312708",
+    ["skip-back"]       = "rbxassetid://74011939017397",
+    ["skip-forward"]    = "rbxassetid://96520921266486",
+    ["circle-alert"]    = "rbxassetid://72204937258553",
+    ["triangle-alert"]  = "rbxassetid://124509031427373",
+    ["user-round"]      = "rbxassetid://108256622731883",
+    ["users-round"]     = "rbxassetid://96906563206392",
+    ["gamepad-2"]       = "rbxassetid://126074969556515",
+    ["flame"]           = "rbxassetid://100387296039230",
+    ["sparkles"]        = "rbxassetid://136365218255099",
+    ["info"]            = "rbxassetid://126633647239092",
+    ["check"]           = "rbxassetid://93912665739148",
+    ["chevron-right"]   = "rbxassetid://88401619016130",
+    ["chevron-left"]    = "rbxassetid://107604297971776",
+    ["menu"]            = "rbxassetid://96553995054331",
+    ["house"]           = "rbxassetid://76201794045889",
+    ["search"]          = "rbxassetid://91945241943601",
+    ["settings"]        = "rbxassetid://133220441796193",
+    ["shield"]          = "rbxassetid://129838924496395",
+    ["target"]          = "rbxassetid://135691454830657",
+    ["crosshair"]       = "rbxassetid://87144352307029",
+    ["sword"]           = "rbxassetid://105666445812762",
+    ["swords"]          = "rbxassetid://101454174088778",
+    ["eye"]             = "rbxassetid://111545834461192",
+    ["eye-off"]         = "rbxassetid://101937481624072",
+    ["music"]           = "rbxassetid://108457675590893",
+    ["play"]            = "rbxassetid://109039889229614",
+    ["volume"]          = "rbxassetid://106970139826695",
+    ["wifi"]            = "rbxassetid://116858464331400",
+    ["terminal"]        = "rbxassetid://126365458678145",
+    ["code"]            = "rbxassetid://113882494754985",
+    ["folder"]          = "rbxassetid://74468149216972",
+    ["file"]            = "rbxassetid://130100423122751",
+    ["clipboard"]       = "rbxassetid://112050833024598",
+    ["download"]        = "rbxassetid://91190904673424",
+    ["trash"]           = "rbxassetid://140189920092418",
+    ["maximize"]        = "rbxassetid://92485191441668",
+    ["minimize"]        = "rbxassetid://110869105682492",
 }
 
+
 local NOTIFICATION_STYLES = {
-    info    = { Name = "Info",    Color = Color3.fromRGB(178, 178, 182), Icon = "rbxassetid://10723345067" },
-    success = { Name = "Success", Color = Color3.fromRGB(105, 166, 124), Icon = "rbxassetid://5180860280" },
-    warning = { Name = "Warning", Color = Color3.fromRGB(190, 154, 84),  Icon = "rbxassetid://10747387522" },
-    error   = { Name = "Error",   Color = Color3.fromRGB(190, 99, 99),   Icon = "rbxassetid://10747387522" },
+    info    = { Name = "Info",    Color = Color3.fromRGB(178, 178, 182), Icon = ICONS.alert },
+    success = { Name = "Success", Color = Color3.fromRGB(105, 166, 124), Icon = ICONS.check },
+    warning = { Name = "Warning", Color = Color3.fromRGB(190, 154, 84),  Icon = ICONS.warning },
+    error   = { Name = "Error",   Color = Color3.fromRGB(190, 99, 99),   Icon = ICONS.warning },
 }
 
 local C = {
@@ -482,7 +531,7 @@ local function createIconElement(parent, iconType, iconValue, size, zindex)
             AnchorPoint = Vector2.new(0.5, 0.5),
             Position = UDim2.fromScale(0.5, 0.5),
             Size = UDim2.fromOffset(size, size),
-            ScaleType = Enum.ScaleType.Fit,
+            ResampleMode = Enum.ResamplerMode.Default, ScaleType = Enum.ScaleType.Fit,
             ImageColor3 = C.TextGray,
             ZIndex = zindex,
             Parent = parent,
@@ -1584,14 +1633,14 @@ local function buildMusicPlayer(cfg)
     local totTime = make("TextLabel", { Text = "0:00", Font = Enum.Font.GothamMedium, TextSize = 10, TextColor3 = C.TextDim, TextXAlignment = Enum.TextXAlignment.Right, AnchorPoint = Vector2.new(1, 0), Position = UDim2.new(1, -16, 0, 114), Size = UDim2.fromOffset(60, 12), ZIndex = 152, Parent = musicPanel })
 
     -- Controls (image-based transport icons; rewind sized up to match skip's visual weight)
-    local ICON_PREV = "rbxassetid://79890332995329"
-    local ICON_PLAY = "rbxassetid://10269757325"
-    local ICON_NEXT = "rbxassetid://15946567603"
+    local ICON_PREV = "rbxassetid://74011939017397"
+    local ICON_PLAY = ICONS.play
+    local ICON_NEXT = "rbxassetid://96520921266486"
     local ctl = make("Frame", { Position = UDim2.fromOffset(0, 132), Size = UDim2.new(1, 0, 0, 48), BackgroundTransparency = 1, ZIndex = 152, Parent = musicPanel })
     make("UIListLayout", { FillDirection = Enum.FillDirection.Horizontal, HorizontalAlignment = Enum.HorizontalAlignment.Center, VerticalAlignment = Enum.VerticalAlignment.Center, Padding = UDim.new(0, 16), Parent = ctl })
     local function iconBtn(imgId, btnSize, imgSize, order)
         local b = make("TextButton", { Text = "", BackgroundTransparency = 1, Size = UDim2.fromOffset(btnSize, btnSize), LayoutOrder = order, ZIndex = 153, Parent = ctl })
-        local img = make("ImageLabel", { Image = imgId, ImageColor3 = C.TextGray, BackgroundTransparency = 1, AnchorPoint = Vector2.new(0.5, 0.5), Position = UDim2.fromScale(0.5, 0.5), Size = UDim2.fromOffset(imgSize, imgSize), ScaleType = Enum.ScaleType.Fit, ZIndex = 154, Parent = b })
+        local img = make("ImageLabel", { Image = imgId, ImageColor3 = C.TextGray, BackgroundTransparency = 1, AnchorPoint = Vector2.new(0.5, 0.5), Position = UDim2.fromScale(0.5, 0.5), Size = UDim2.fromOffset(imgSize, imgSize), ResampleMode = Enum.ResamplerMode.Default, ScaleType = Enum.ScaleType.Fit, ZIndex = 154, Parent = b })
         b.MouseEnter:Connect(function() tween(img, { ImageColor3 = C.White }) end)
         b.MouseLeave:Connect(function() tween(img, { ImageColor3 = C.TextGray }) end)
         return b, img
@@ -1599,7 +1648,7 @@ local function buildMusicPlayer(cfg)
     local prevBtn = iconBtn(ICON_PREV, 40, 54, 1)
     -- play / pause (icon only, accent-tinted): play uses a texture, pause is two clean bars
     local playBtn = make("TextButton", { Text = "", BackgroundTransparency = 1, Size = UDim2.fromOffset(52, 52), LayoutOrder = 2, ZIndex = 153, Parent = ctl })
-    local playImg = make("ImageLabel", { Image = ICON_PLAY, ImageColor3 = C.Accent, BackgroundTransparency = 1, AnchorPoint = Vector2.new(0.5, 0.5), Position = UDim2.fromScale(0.5, 0.5), Size = UDim2.fromOffset(34, 34), ScaleType = Enum.ScaleType.Fit, ZIndex = 154, Parent = playBtn })
+    local playImg = make("ImageLabel", { Image = ICON_PLAY, ImageColor3 = C.Accent, BackgroundTransparency = 1, AnchorPoint = Vector2.new(0.5, 0.5), Position = UDim2.fromScale(0.5, 0.5), Size = UDim2.fromOffset(34, 34), ResampleMode = Enum.ResamplerMode.Default, ScaleType = Enum.ScaleType.Fit, ZIndex = 154, Parent = playBtn })
     local pauseHolder = make("Frame", { BackgroundTransparency = 1, AnchorPoint = Vector2.new(0.5, 0.5), Position = UDim2.fromScale(0.5, 0.5), Size = UDim2.fromOffset(16, 18), Visible = false, ZIndex = 154, Parent = playBtn })
     local pb1 = make("Frame", { Size = UDim2.fromOffset(5, 18), Position = UDim2.fromOffset(1, 0), BackgroundColor3 = C.Accent, ZIndex = 155, Parent = pauseHolder }); corner(pb1, 2)
     local pb2 = make("Frame", { Size = UDim2.fromOffset(5, 18), Position = UDim2.fromOffset(10, 0), BackgroundColor3 = C.Accent, ZIndex = 155, Parent = pauseHolder }); corner(pb2, 2)
@@ -1619,7 +1668,7 @@ local function buildMusicPlayer(cfg)
     local plLabel = make("TextLabel", { Text = "PLAYLIST", Font = Enum.Font.GothamBold, TextSize = 10, TextColor3 = C.TextDim, TextXAlignment = Enum.TextXAlignment.Left, BackgroundTransparency = 1, Position = UDim2.fromOffset(18, 216), Size = UDim2.fromOffset(120, 14), ZIndex = 152, Parent = musicPanel })
     local refreshBtn = make("TextButton", { Text = "", AnchorPoint = Vector2.new(1, 0.5), Position = UDim2.new(1, -16, 0, 223), Size = UDim2.fromOffset(22, 22), BackgroundColor3 = C.Element, ZIndex = 152, Parent = musicPanel })
     corner(refreshBtn, 7); stroke(refreshBtn, C.Border)
-    local refreshIcon = make("ImageLabel", { Image = ICONS.refresh, ImageColor3 = C.TextGray, BackgroundTransparency = 1, AnchorPoint = Vector2.new(0.5, 0.5), Position = UDim2.fromScale(0.5, 0.5), Size = UDim2.fromOffset(13, 13), ZIndex = 153, Parent = refreshBtn })
+    local refreshIcon = make("ImageLabel", { Image = ICONS.refresh, ImageColor3 = C.White, BackgroundTransparency = 1, AnchorPoint = Vector2.new(0.5, 0.5), Position = UDim2.fromScale(0.5, 0.5), Size = UDim2.fromOffset(13, 13), ZIndex = 153, Parent = refreshBtn })
 
     -- Playlist
     local list = make("ScrollingFrame", { Position = UDim2.fromOffset(16, 238), Size = UDim2.new(1, -32, 1, -254), BackgroundColor3 = C.WindowBg, ScrollBarThickness = 3, ScrollBarImageColor3 = C.Border, CanvasSize = UDim2.new(), AutomaticCanvasSize = Enum.AutomaticSize.Y, ZIndex = 152, Parent = musicPanel })
@@ -1859,7 +1908,7 @@ local function buildMusicPlayer(cfg)
             TweenService:Create(musicPanel, PROFILE_TWEEN, { Position = tp, GroupTransparency = tr }):Play()
         end
         if musicToggleBtn then musicToggleBtn.BackgroundColor3 = musicOpen and C.PillActive or C.Element end
-        if musicToggleIcon then musicToggleIcon.ImageColor3 = musicOpen and C.Accent or C.TextGray end
+        if musicToggleIcon then musicToggleIcon.ImageColor3 = musicOpen and C.White or C.TextGray end
         if musicOpen and #tracks == 0 then rescan() end
     end
     local function toggleMusic() setMusicVisible(not musicOpen) end
@@ -2283,7 +2332,7 @@ function Library:CreateWindow(opts)
         Name = "PillLogo", Image = logoAsset,
         BackgroundTransparency = 1, ImageColor3 = C.Accent,
         AnchorPoint = Vector2.new(0.5, 0.5), Position = UDim2.fromScale(0.5, 0.5),
-        Size = UDim2.fromScale(math.min(logoZoom * 0.9, 1.8), math.min(logoZoom * 0.9, 1.8)), ScaleType = Enum.ScaleType.Fit,
+        Size = UDim2.fromScale(math.min(logoZoom * 0.9, 1.8), math.min(logoZoom * 0.9, 1.8)), ResampleMode = Enum.ResamplerMode.Default, ScaleType = Enum.ScaleType.Fit,
         ZIndex = 202, Parent = pillLogoHolder
     })
 
@@ -2307,10 +2356,10 @@ function Library:CreateWindow(opts)
         Padding = UDim.new(0, 5), Parent = pingFrame
     })
     local wifiIcon = make("ImageLabel", {
-        Name = "WifiIcon", Image = "rbxassetid://105253464688580",
+        Name = "WifiIcon", Image = "rbxassetid://116858464331400",
         LayoutOrder = 1, ImageColor3 = Color3.fromRGB(75, 215, 125),
         BackgroundTransparency = 1, Size = UDim2.fromOffset(15, 15),
-        ScaleType = Enum.ScaleType.Fit, ZIndex = 202, Parent = pingFrame
+        ResampleMode = Enum.ResamplerMode.Default, ScaleType = Enum.ScaleType.Fit, ZIndex = 202, Parent = pingFrame
     })
     local pingLabel = make("TextLabel", {
         Name = "PingLabel", Text = "0ms", Font = Enum.Font.GothamBold,
@@ -2340,10 +2389,10 @@ function Library:CreateWindow(opts)
         Padding = UDim.new(0, 5), Parent = fpsFrame
     })
     local fpsIcon = make("ImageLabel", {
-        Name = "FpsIcon", Image = "rbxassetid://10709772833",
+        Name = "FpsIcon", Image = "rbxassetid://91097114340089",
         LayoutOrder = 1, ImageColor3 = Color3.fromRGB(75, 215, 125),
         BackgroundTransparency = 1, Size = UDim2.fromOffset(14, 14),
-        ScaleType = Enum.ScaleType.Fit, ZIndex = 202, Parent = fpsFrame
+        ResampleMode = Enum.ResamplerMode.Default, ScaleType = Enum.ScaleType.Fit, ZIndex = 202, Parent = fpsFrame
     })
     local fpsLabel = make("TextLabel", {
         Name = "FpsLabel", Text = "60 FPS", Font = Enum.Font.GothamBold,
@@ -2368,11 +2417,11 @@ function Library:CreateWindow(opts)
             if burgerButton.Visible then
                 fpsLabel.Text = tostring(lastFpsVal) .. " FPS"
                 if lastFpsVal >= 50 then
-                    fpsIcon.ImageColor3 = Color3.fromRGB(75, 215, 125)
+                    fpsIcon.ImageColor3 = C.White
                 elseif lastFpsVal >= 30 then
-                    fpsIcon.ImageColor3 = Color3.fromRGB(240, 190, 50)
+                    fpsIcon.ImageColor3 = C.White
                 else
-                    fpsIcon.ImageColor3 = Color3.fromRGB(235, 75, 75)
+                    fpsIcon.ImageColor3 = C.White
                 end
             end
         end
@@ -2385,11 +2434,11 @@ function Library:CreateWindow(opts)
                 local ping = PingStat and math.round(PingStat:GetValue()) or 0
                 pingLabel.Text = ping .. "ms"
                 if ping <= 90 then
-                    wifiIcon.ImageColor3 = Color3.fromRGB(75, 215, 125)
+                    wifiIcon.ImageColor3 = C.White
                 elseif ping <= 160 then
-                    wifiIcon.ImageColor3 = Color3.fromRGB(240, 190, 50)
+                    wifiIcon.ImageColor3 = C.White
                 else
-                    wifiIcon.ImageColor3 = Color3.fromRGB(235, 75, 75)
+                    wifiIcon.ImageColor3 = C.White
                 end
             end
         end
@@ -2459,8 +2508,8 @@ function Library:CreateWindow(opts)
     brandShimmerGradient:SetAttribute("ThemeGradient_Edge", "Accent")
     -- The logo holder clips, and the image inside is scaled by `logoZoom`, so
     -- the Akaz mark lands at ~88% of this box without any of it being cut off.
-    local logoHolder = make("Frame", { Position=UDim2.fromOffset(11,12), Size=UDim2.fromOffset(40,40), BackgroundTransparency=1, ClipsDescendants=true, Parent=brand })
-    local brandLogo = make("ImageLabel",{Name="Logo",Image=logoAsset,BackgroundTransparency=1,AnchorPoint=Vector2.new(0.5,0.5),Position=UDim2.fromScale(0.5,0.5),Size=UDim2.fromScale(logoZoom,logoZoom),ScaleType=Enum.ScaleType.Fit,Parent=logoHolder})
+    local logoHolder = make("Frame", { Position=UDim2.fromOffset(11,12), Size=UDim2.fromOffset(44,44), BackgroundTransparency=1, ClipsDescendants=false, Parent=brand })
+    local brandLogo = make("ImageLabel",{Name="Logo",Image=logoAsset,BackgroundTransparency=1,AnchorPoint=Vector2.new(0.5,0.5),Position=UDim2.fromScale(0.5,0.5),Size=UDim2.fromScale(logoZoom,logoZoom),ResampleMode=Enum.ResamplerMode.Default,ScaleType=Enum.ScaleType.Fit,ImageColor3=Color3.fromRGB(255,255,255),ImageTransparency=0,Parent=logoHolder})
     make("TextLabel",{Text=opts.Name or "Akaz Hub",Font=Enum.Font.GothamBold,TextSize=13,TextColor3=C.White,TextXAlignment=Enum.TextXAlignment.Left,TextTruncate=Enum.TextTruncate.AtEnd,BackgroundTransparency=1,Position=UDim2.fromOffset(58,16),Size=UDim2.new(1,-66,0,17),Parent=brand})
     make("TextLabel",{Text=opts.BrandSubtitle or ("AKAZ HUB • v"..Library.Version),Font=Enum.Font.GothamMedium,TextSize=9,TextColor3=C.TextDim,TextXAlignment=Enum.TextXAlignment.Left,TextTruncate=Enum.TextTruncate.AtEnd,BackgroundTransparency=1,Position=UDim2.fromOffset(58,35),Size=UDim2.new(1,-66,0,13),Parent=brand})
 
@@ -2476,7 +2525,7 @@ function Library:CreateWindow(opts)
 
     local discordBtn = make("TextButton",{Name="DiscordButton",Text="",AutoButtonColor=false,Position=UDim2.fromOffset(50,45),Size=UDim2.new(1,-58,0,22),BackgroundColor3=C.Element,Parent=pcard})
     corner(discordBtn,6); stroke(discordBtn,C.Border)
-    local discordIcon = make("ImageLabel",{Image=AKAZ_DISCORD_LOGO_URL,BackgroundTransparency=1,Position=UDim2.fromOffset(6,4),Size=UDim2.fromOffset(14,14),ScaleType=Enum.ScaleType.Fit,ImageColor3=C.TextGray,Parent=discordBtn})
+    local discordIcon = make("ImageLabel",{Image=AKAZ_DISCORD_LOGO_URL,BackgroundTransparency=1,Position=UDim2.fromOffset(6,4),Size=UDim2.fromOffset(14,14),ScaleType=Enum.ScaleType.Fit,ImageColor3=C.White,Parent=discordBtn})
     local discordLabel = make("TextLabel",{Text="Discord",Font=Enum.Font.GothamMedium,TextSize=10,TextColor3=C.TextGray,TextXAlignment=Enum.TextXAlignment.Left,BackgroundTransparency=1,Position=UDim2.fromOffset(25,0),Size=UDim2.new(1,-31,1,0),Parent=discordBtn})
     discordBtn.MouseEnter:Connect(function()
         tween(discordBtn,{BackgroundColor3=C.ElementHover})
@@ -2486,7 +2535,7 @@ function Library:CreateWindow(opts)
     discordBtn.MouseLeave:Connect(function()
         tween(discordBtn,{BackgroundColor3=C.Element})
         tween(discordLabel,{TextColor3=C.TextGray})
-        tween(discordIcon,{ImageColor3=C.TextGray})
+        tween(discordIcon,{ImageColor3=C.White})
     end)
     discordBtn.MouseButton1Click:Connect(function()
         local clipboard = (typeof(setclipboard) == "function" and setclipboard)
@@ -2540,7 +2589,7 @@ function Library:CreateWindow(opts)
                 AnchorPoint = Vector2.new(0.5, 0.5),
                 Position = UDim2.new(0.5, math.cos(ang) * RING_PUSH, 0.5, math.sin(ang) * RING_PUSH),
                 Size = UDim2.fromScale(logoZoom, logoZoom),
-                ScaleType = Enum.ScaleType.Fit, Parent = outlineGroup,
+                ResampleMode = Enum.ResamplerMode.Default, ScaleType = Enum.ScaleType.Fit, Parent = outlineGroup,
             })
         end
         -- Colour and fade both come from the gradient, so the rim is accent at
@@ -2571,7 +2620,7 @@ function Library:CreateWindow(opts)
             ImageColor3 = C.WindowBg, ImageTransparency = 0,
             AnchorPoint = Vector2.new(0.5, 0.5), Position = UDim2.fromScale(0.5, 0.5),
             Size = UDim2.fromScale(logoZoom, logoZoom),
-            ScaleType = Enum.ScaleType.Fit, ZIndex = 2, Parent = watermarkHolder,
+            ResampleMode = Enum.ResamplerMode.Default, ScaleType = Enum.ScaleType.Fit, ZIndex = 2, Parent = watermarkHolder,
         })
         watermarkMask:SetAttribute("Theme_ImageColor3", "WindowBg")
     end
@@ -2664,7 +2713,7 @@ function Library:CreateWindow(opts)
     -- Music player toggle (sits to the right of the PLAYER PROFILE title)
     local musicToggleBtn=make("TextButton",{Name="MusicToggle",Text="",AutoButtonColor=false,AnchorPoint=Vector2.new(1,0),Position=UDim2.new(1,-16,0,14),Size=UDim2.fromOffset(34,34),BackgroundColor3=C.Element,ZIndex=153,Parent=profileHeader})
     corner(musicToggleBtn,9);stroke(musicToggleBtn,C.Border)
-    local musicToggleIcon=make("ImageLabel",{Image=ICONS.music,BackgroundTransparency=1,AnchorPoint=Vector2.new(0.5,0.5),Position=UDim2.fromScale(0.5,0.5),Size=UDim2.fromOffset(16,16),ImageColor3=C.TextGray,ZIndex=154,Parent=musicToggleBtn})
+    local musicToggleIcon=make("ImageLabel",{Image=ICONS.music,BackgroundTransparency=1,AnchorPoint=Vector2.new(0.5,0.5),Position=UDim2.fromScale(0.5,0.5),Size=UDim2.fromOffset(16,16),ImageColor3=C.White,ZIndex=154,Parent=musicToggleBtn})
     musicToggleBtn.MouseButton1Click:Connect(function() if toggleMusic then toggleMusic() end end)
     local identityCard=make("Frame",{Position=UDim2.fromOffset(16,82),Size=UDim2.new(1,-32,0,116),BackgroundColor3=C.Element,ZIndex=151,Parent=profilePanel})
     corner(identityCard,11);stroke(identityCard,C.Border)
@@ -2923,7 +2972,7 @@ function Library:CreateWindow(opts)
         })
         corner(refreshAdminBtn, 7); stroke(refreshAdminBtn, C.Border)
         local refreshAdminIcon = make("ImageLabel", {
-            Image = ICONS.refresh, ImageColor3 = C.TextGray, BackgroundTransparency = 1,
+            Image = ICONS.refresh, ImageColor3 = C.White, BackgroundTransparency = 1,
             AnchorPoint = Vector2.new(0.5, 0.5), Position = UDim2.fromScale(0.5, 0.5),
             Size = UDim2.fromOffset(13, 13), ZIndex = 152, Parent = refreshAdminBtn,
         })
@@ -3404,7 +3453,7 @@ function Library:CreateWindow(opts)
             ZIndex = 60, Parent = screenGui,
         })
         corner(fab, 12); stroke(fab, C.Border)
-        make("ImageLabel", { Image = logoAsset, BackgroundTransparency = 1, AnchorPoint = Vector2.new(0.5, 0.5), Position = UDim2.fromScale(0.5, 0.5), Size = UDim2.fromOffset(26, 26), ScaleType = Enum.ScaleType.Fit, ZIndex = 61, Parent = fab })
+        make("ImageLabel", { Image = logoAsset, BackgroundTransparency = 1, AnchorPoint = Vector2.new(0.5, 0.5), Position = UDim2.fromScale(0.5, 0.5), Size = UDim2.fromOffset(26, 26), ResampleMode = Enum.ResamplerMode.Default, ScaleType = Enum.ScaleType.Fit, ZIndex = 61, Parent = fab })
         local fabDrag = makeDraggable(fab, {})
         if fabDrag then table.insert(windowRef._connections, fabDrag) end
         -- distinguish a tap (toggle) from a drag (move) using a movement threshold
@@ -3560,7 +3609,7 @@ function Window:Notify(opts)
     -- Style icon chip
     local iconHolder=make("Frame",{Position=UDim2.fromOffset(14,17),Size=UDim2.fromOffset(28,28),BackgroundColor3=style.Color,BackgroundTransparency=0.88,ZIndex=202,Parent=card})
     corner(iconHolder,8)
-    make("ImageLabel",{Image=style.Icon or ICONS.alert,ImageColor3=style.Color,BackgroundTransparency=1,AnchorPoint=Vector2.new(0.5,0.5),Position=UDim2.fromScale(0.5,0.5),Size=UDim2.fromOffset(15,15),ScaleType=Enum.ScaleType.Fit,ZIndex=203,Parent=iconHolder})
+    make("ImageLabel",{Image=style.Icon or ICONS.alert,ImageColor3=C.White,BackgroundTransparency=1,AnchorPoint=Vector2.new(0.5,0.5),Position=UDim2.fromScale(0.5,0.5),Size=UDim2.fromOffset(15,15),ScaleType=Enum.ScaleType.Fit,ZIndex=203,Parent=iconHolder})
     make("TextLabel",{Text=title,Font=Enum.Font.GothamBold,TextSize=12,TextColor3=style.Color,TextXAlignment=Enum.TextXAlignment.Left,TextTruncate=Enum.TextTruncate.AtEnd,BackgroundTransparency=1,Position=UDim2.fromOffset(52,8),Size=UDim2.new(1,-84,0,16),ZIndex=202,Parent=card})
     make("TextLabel",{Text=body,Font=Enum.Font.Gotham,TextSize=11,TextColor3=C.TextGray,TextXAlignment=Enum.TextXAlignment.Left,TextYAlignment=Enum.TextYAlignment.Top,TextWrapped=true,BackgroundTransparency=1,Position=UDim2.fromOffset(52,27),Size=UDim2.new(1,-64,0,26),ZIndex=202,Parent=card})
     local xb=make("TextButton",{Text="×",Font=Enum.Font.Gotham,TextSize=14,TextColor3=C.TextDim,AnchorPoint=Vector2.new(1,0),Position=UDim2.new(1,-7,0,5),Size=UDim2.fromOffset(20,20),BackgroundTransparency=1,ZIndex=204,Parent=card})

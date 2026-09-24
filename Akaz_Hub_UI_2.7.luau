@@ -2620,7 +2620,7 @@ function Library:CreateWindow(opts)
         ColorSequenceKeypoint.new(1, Color3.fromRGB(255,255,255)),
     }), Parent=brandLogoFallback})
     make("TextLabel",{Text=opts.Name or "Akaz Hub",Font=Enum.Font.GothamBold,TextSize=13,TextColor3=C.White,TextXAlignment=Enum.TextXAlignment.Left,TextTruncate=Enum.TextTruncate.AtEnd,BackgroundTransparency=1,Position=UDim2.fromOffset(58,16),Size=UDim2.new(1,-66,0,17),Parent=brand})
-    make("TextLabel",{Text=opts.BrandSubtitle or ("AKAZ HUB • v"..Library.Version),Font=Enum.Font.GothamMedium,TextSize=9,TextColor3=C.TextDim,TextXAlignment=Enum.TextXAlignment.Left,TextTruncate=Enum.TextTruncate.AtEnd,BackgroundTransparency=1,Position=UDim2.fromOffset(58,35),Size=UDim2.new(1,-66,0,13),Parent=brand})
+    make("TextLabel",{Text=opts.BrandSubtitle or "by as95",Font=Enum.Font.GothamMedium,TextSize=9,TextColor3=C.TextDim,TextXAlignment=Enum.TextXAlignment.Left,TextTruncate=Enum.TextTruncate.AtEnd,BackgroundTransparency=1,Position=UDim2.fromOffset(58,35),Size=UDim2.new(1,-66,0,13),Parent=brand})
 
     -- Player mini-card: identity only. Discord is deliberately outside this card,
     -- directly underneath the name/tag area rather than inside the name tag block.

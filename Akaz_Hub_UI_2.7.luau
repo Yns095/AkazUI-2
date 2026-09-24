@@ -10,6 +10,8 @@ local HttpService      = game:GetService("HttpService")
 local Workspace        = game:GetService("Workspace")
 
 local AKAZ_LOGO_URL = "https://raw.githubusercontent.com/Yns095/AkazUI-2/main/image-removebg-preview%20(1).png"
+local AKAZ_DISCORD_LOGO_URL = "https://raw.githubusercontent.com/Yns095/AkazUI-2/main/image-removebg-preview%20(2).png"
+local DISCORD_INVITE_URL = "https://discord.gg/PCep5XRFS4"
 local DEFAULT_LOGO = AKAZ_LOGO_URL
 local TWEEN = TweenInfo.new(0.15, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
 local NOTIFICATION_TWEEN = TweenInfo.new(0.18, Enum.EasingStyle.Quart, Enum.EasingDirection.Out)
@@ -150,10 +152,10 @@ local C = {
     HotbarActive = Color3.fromRGB(31, 31, 31),
     HotbarHover  = Color3.fromRGB(38, 38, 38),
     HotbarDot    = Color3.fromRGB(220, 220, 220),
-    Accent       = Color3.fromRGB(146, 118, 255),
-    AccentDim    = Color3.fromRGB(49, 42, 76),
-    AccentText   = Color3.fromRGB(255, 255, 255),
-    KnobAccent   = Color3.fromRGB(255, 255, 255),
+    Accent       = Color3.fromRGB(240, 240, 240),
+    AccentDim    = Color3.fromRGB(38, 38, 38),
+    AccentText   = Color3.fromRGB(12, 12, 12),
+    KnobAccent   = Color3.fromRGB(12, 12, 12),
 }
 
 local THEMES = {
@@ -181,8 +183,8 @@ local THEMES = {
         HotbarActive = Color3.fromRGB(235, 235, 235),
         HotbarHover  = Color3.fromRGB(229, 229, 229),
         HotbarDot    = Color3.fromRGB(60, 60, 60),
-        Accent       = Color3.fromRGB(74, 57, 145),
-        AccentDim    = Color3.fromRGB(214, 207, 240),
+        Accent       = Color3.fromRGB(20, 20, 20),
+        AccentDim    = Color3.fromRGB(208, 208, 208),
         AccentText   = Color3.fromRGB(255, 255, 255),
         KnobAccent   = Color3.fromRGB(255, 255, 255),
     },
@@ -209,10 +211,10 @@ local THEMES = {
         HotbarActive = Color3.fromRGB(12, 12, 12),
         HotbarHover  = Color3.fromRGB(20, 20, 20),
         HotbarDot    = Color3.fromRGB(200, 200, 200),
-        Accent       = Color3.fromRGB(166, 142, 255),
-        AccentDim    = Color3.fromRGB(42, 34, 66),
-        AccentText   = Color3.fromRGB(255, 255, 255),
-        KnobAccent   = Color3.fromRGB(255, 255, 255),
+        Accent       = Color3.fromRGB(245, 245, 245),
+        AccentDim    = Color3.fromRGB(32, 32, 32),
+        AccentText   = Color3.fromRGB(8, 8, 8),
+        KnobAccent   = Color3.fromRGB(8, 8, 8),
     },
 }
 
@@ -558,7 +560,7 @@ local function ensureTagGui()
     if not targetParent then targetParent = localPlayer:WaitForChild("PlayerGui") end
 
     local sg = Instance.new("ScreenGui")
-    sg.Name               = "AkazTagGui"
+    sg.Name               = "ArcTagGui"
     sg.ResetOnSpawn       = false
     sg.IgnoreGuiInset     = true
     sg.ZIndexBehavior     = Enum.ZIndexBehavior.Sibling
@@ -578,7 +580,7 @@ local function buildTagFrame(player)
 
     -- Root container: fixed pixel size, positioned by RenderStepped loop
     local root = Instance.new("Frame")
-    root.Name              = "AkazTag_" .. player.UserId
+    root.Name              = "ArcTag_" .. player.UserId
     root.Size              = UDim2.fromOffset(TAG_W, TAG_H)
     root.AnchorPoint       = Vector2.new(0.5, 0.5)
     root.BackgroundColor3  = Color3.fromRGB(22, 22, 26)
@@ -748,7 +750,7 @@ local function buildTagFrame(player)
     userLabel.ZIndex         = 2
     userLabel.Parent         = root
 
-    -- "Akaz" badge (bottom right, small pill)
+    -- "Arc" badge (bottom right, small pill)
     local badge = Instance.new("Frame")
     badge.Size             = UDim2.fromOffset(badgeW, 16)
     badge.AnchorPoint      = Vector2.new(1, 1)
@@ -769,7 +771,7 @@ local function buildTagFrame(player)
     badgeStroke.Parent = badge
 
     local badgeLabel = Instance.new("TextLabel")
-    badgeLabel.Text              = "Akaz"
+    badgeLabel.Text              = "Arc"
     badgeLabel.Font              = Enum.Font.GothamBold
     badgeLabel.TextSize          = 8
     badgeLabel.TextColor3        = C.AccentText
@@ -804,11 +806,11 @@ local function applyOutline(player)
     if not char then return nil end
 
     -- Remove any existing highlight first
-    local existing = char:FindFirstChild("AkazOutline")
+    local existing = char:FindFirstChild("ArcOutline")
     if existing then existing:Destroy() end
 
     local hl = Instance.new("Highlight")
-    hl.Name             = "AkazOutline"
+    hl.Name             = "ArcOutline"
     hl.FillColor        = Color3.fromRGB(0, 0, 0)
     hl.FillTransparency = 1            -- outline only, no fill
     hl.OutlineColor     = TAG_OUTLINE_COLOR
@@ -822,7 +824,7 @@ end
 local function clearOutline(player)
     local char = player.Character
     if not char then return end
-    local existing = char:FindFirstChild("AkazOutline")
+    local existing = char:FindFirstChild("ArcOutline")
     if existing then existing:Destroy() end
 end
 
@@ -849,7 +851,7 @@ local function addTag(player)
     local function refreshOutline()
         local char = player.Character
         if not char then return end
-        local existing = char:FindFirstChild("AkazOutline")
+        local existing = char:FindFirstChild("ArcOutline")
         if not existing then applyOutline(player) end
     end
     refreshOutline()
@@ -874,7 +876,7 @@ local function addTag(player)
         end
 
         -- Ensure outline exists on the current character, and animate it
-        local outline = char:FindFirstChild("AkazOutline")
+        local outline = char:FindFirstChild("ArcOutline")
         if not outline then outline = applyOutline(player) end
 
         local camera = Workspace.CurrentCamera
@@ -1015,7 +1017,7 @@ local function tagRegister()
     -- If the server has queued this user for an admin kick, comply.
     local sok, data = pcall(function() return HttpService:JSONDecode(res.Body) end)
     if sok and type(data) == "table" and data.kick == true then
-        pcall(function() lp:Kick("[Akaz] Disconnected by admin") end)
+        pcall(function() lp:Kick("[Arc] Disconnected by admin") end)
     end
 end
 
@@ -1512,7 +1514,7 @@ local function buildMusicPlayer(cfg)
     local CLOSE_RED_HI   = Color3.fromRGB(212, 80, 80)
     local MIN_YELLOW     = Color3.fromRGB(255, 195, 0)
     local MIN_YELLOW_HI  = Color3.fromRGB(255, 211, 70)
-    local MUSIC_FOLDER   = tostring(opts.MusicFolder or "AkazHubMusic")
+    local MUSIC_FOLDER   = tostring(opts.MusicFolder or "AkazMusic")
     local musicWidth     = profileWidth
     local fullHeight     = 384
     local compactHeight  = 190
@@ -1525,7 +1527,7 @@ local function buildMusicPlayer(cfg)
     -- 2D audio playback via SoundService
     local SoundService = game:GetService("SoundService")
     local musicSound   = Instance.new("Sound")
-    musicSound.Name   = "AkazHubMusicPlayer"
+    musicSound.Name   = "AkazMusicPlayer"
     musicSound.Volume = 0.5
     musicSound.Looped = false
     pcall(function() musicSound.Parent = SoundService end)
@@ -1554,7 +1556,7 @@ local function buildMusicPlayer(cfg)
 
     -- ── Panel shell (compact, matches the profile / performance panels) ─────
     local musicPanel = make("CanvasGroup", { Name = "MusicPlayer", AnchorPoint = Vector2.new(1, 1), Position = musicClosedPos, Size = UDim2.fromOffset(musicWidth, fullHeight), BackgroundColor3 = C.CardBg, GroupTransparency = 1, ClipsDescendants = true, ZIndex = 150, Parent = screenGui })
-    corner(musicPanel, 16)
+    corner(musicPanel, 14)
 
     -- Header
     make("TextLabel", { Text = "MUSIC PLAYER", Font = Enum.Font.GothamBold, TextSize = 13, TextColor3 = C.White, TextXAlignment = Enum.TextXAlignment.Left, BackgroundTransparency = 1, Position = UDim2.fromOffset(16, 12), Size = UDim2.new(1, -70, 0, 18), ZIndex = 152, Parent = musicPanel })
@@ -1736,7 +1738,7 @@ local function buildMusicPlayer(cfg)
         end
     end
     local BUILTIN_TRACKS = {
-        { name = "Akaz Anthem", id = "rbxassetid://75485931767123", startTime = 3, endTime = 115 },
+        { name = "Arc Anthem", id = "rbxassetid://75485931767123", startTime = 3, endTime = 115 },
         { name = "Lofi Chill Beats", id = "rbxassetid://9043887091" },
         { name = "Phonk Drift", id = "rbxassetid://9048375035" },
         { name = "Synthwave Glow", id = "rbxassetid://9048376510" },
@@ -1879,53 +1881,15 @@ function Library:CreateWindow(opts)
     -- Auto-start the tag system
     startTagSystem()
 
-    local function resolveLogoAsset(value)
-        local source = normalizeAssetId(value or DEFAULT_LOGO)
-        if not string.match(source, "^https?://") then return source end
-
-        -- Prefer a local executor asset when available, so the GitHub logo
-        -- renders in environments where ImageLabel does not accept remote URLs.
-        local loader = (typeof(getcustomasset) == "function" and getcustomasset)
-            or (typeof(getsynasset) == "function" and getsynasset)
-        if not loader or type(writefile) ~= "function" then return source end
-
-        local folder = "AkazHub/assets"
-        local filePath = folder .. "/akaz-logo.png"
-        pcall(function()
-            if type(isfolder) == "function" and type(makefolder) == "function" and not isfolder("AkazHub") then
-                makefolder("AkazHub")
-            end
-            if type(isfolder) == "function" and type(makefolder) == "function" and not isfolder(folder) then
-                makefolder(folder)
-            end
-        end)
-
-        local exists = type(isfile) == "function" and isfile(filePath)
-        if not exists and httpRequest then
-            local ok, res = pcall(function()
-                return httpRequest({ Url = source, Method = "GET" })
-            end)
-            if ok and res and res.Body and #res.Body > 0 then
-                pcall(writefile, filePath, res.Body)
-                exists = type(isfile) == "function" and isfile(filePath)
-            end
-        end
-        if exists then
-            local ok, custom = pcall(loader, filePath)
-            if ok and custom then return custom end
-        end
-        return source
-    end
-
-    local logoAsset      = resolveLogoAsset(opts.Logo or DEFAULT_LOGO)
-    -- Zoom factor applied to the logo inside its clipping holder. the Akaz asset
+    local logoAsset      = normalizeAssetId(opts.Logo or DEFAULT_LOGO)
+    -- Zoom factor applied to the logo inside its clipping holder. The Akaz asset
     -- is a square canvas whose mark covers ~71% of the width and ~80% of the
     -- height, so 1.1 lands it at ~88% of the holder without cropping any of it
     -- (the old padded asset needed 2.4 for the same visual size). Callers with
     -- their own asset get no zoom, since those are assumed cropped already;
     -- `LogoZoom` overrides either case.
-    local logoZoom       = math.clamp(tonumber(opts.LogoZoom) or (logoAsset == DEFAULT_LOGO and 1.0 or 1), 1, 6)
-    local windowSize     = opts.Size or UDim2.fromOffset(780, 520)
+    local logoZoom       = math.clamp(tonumber(opts.LogoZoom) or (logoAsset == DEFAULT_LOGO and 1.1 or 1), 1, 6)
+    local windowSize     = opts.Size or UDim2.fromOffset(700, 490)
     local windowPosition = opts.Position or UDim2.fromScale(0.5, 0.5)
     local guiName        = opts.GuiName or "AkazHubUI"
 
@@ -1943,8 +1907,8 @@ function Library:CreateWindow(opts)
     end
     local isMobile = (opts.Mobile == true) or (opts.Mobile ~= false and detectMobile())
 
-    local HOTBAR_HEIGHT  = 40
-    local HOTBAR_GAP     = 10
+    local HOTBAR_HEIGHT  = 36
+    local HOTBAR_GAP     = 8
 
     local targetParent
     if typeof(opts.Parent) == "Instance" then
@@ -1993,9 +1957,9 @@ function Library:CreateWindow(opts)
     -- ── LOADING SCREEN (slam-in intro, themed with the accent colour) ─────
     local loadingEnabled      = opts.LoadingAnimation ~= false
     local loadingDuration     = math.clamp(tonumber(opts.LoadingDuration) or 1.2, 0.4, 8)
-    local loadingText         = tostring(opts.LoadingText or opts.Name or "AKAZ")
+    local loadingText         = tostring(opts.LoadingText or opts.Name or "Arc")
     local loadingSub          = tostring(opts.LoadingSubtitle or "HUB")
-    local loadingFooter       = tostring(opts.LoadingFooter or "AKAZ HUB")
+    local loadingFooter       = tostring(opts.LoadingFooter or "Arc HUB")
     local overlayTransparency = math.clamp(tonumber(opts.LoadingOverlayTransparency) or 0.35, 0, 0.9)
 
     -- accent palette derived from the active theme
@@ -2008,6 +1972,33 @@ function Library:CreateWindow(opts)
     local loadingLayer, loadingContent, loadingLogoScale, loadingTitleScale, loadingProgressFill
     local loadingBlur, loadingSound
 
+    -- Remove a stale Akaz loader blur left by an interrupted/reloaded run.
+    pcall(function()
+        local lighting = game:GetService("Lighting")
+        local stale = lighting:FindFirstChild("AkazLoadingBlur")
+        if stale and stale:IsA("BlurEffect") then
+            stale.Size = 0
+            stale:Destroy()
+        end
+    end)
+
+    local function clearLoadingBlur()
+        pcall(function()
+            if loadingBlur then
+                loadingBlur.Size = 0
+                loadingBlur:Destroy()
+                loadingBlur = nil
+            else
+                local lighting = game:GetService("Lighting")
+                local stale = lighting:FindFirstChild("AkazLoadingBlur")
+                if stale and stale:IsA("BlurEffect") then
+                    stale.Size = 0
+                    stale:Destroy()
+                end
+            end
+        end)
+    end
+
     if loadingEnabled then
         loadingLayer = make("CanvasGroup", {
             Name = "StartupLoader", Size = UDim2.fromScale(1, 1),
@@ -2017,6 +2008,7 @@ function Library:CreateWindow(opts)
 
         if opts.LoadingBlur ~= false then
             loadingBlur = Instance.new("BlurEffect")
+            loadingBlur.Name = "AkazLoadingBlur"
             loadingBlur.Size = 0
             pcall(function() loadingBlur.Parent = game:GetService("Lighting") end)
         end
@@ -2098,7 +2090,11 @@ function Library:CreateWindow(opts)
             task.wait(0.08)
             TweenService:Create(rightLbl, TweenInfo.new(0.15, Enum.EasingStyle.Quad), { TextTransparency = 0 }):Play()
             task.wait(math.clamp(loadingDuration * 0.25, 0.15, 0.8))
-            if not loadingLayer.Parent then return end
+            if not loadingLayer.Parent then
+                loadingMotionComplete = true
+                clearLoadingBlur()
+                return
+            end
             local slideInfo = TweenInfo.new(0.22, Enum.EasingStyle.Quart, Enum.EasingDirection.In)
             TweenService:Create(leftLbl, slideInfo, { Position = UDim2.new(0.5, 0, 0.5, -27) }):Play()
             TweenService:Create(rightLbl, slideInfo, { Position = UDim2.new(0.5, 0, 0.5, -27) }):Play()
@@ -2132,22 +2128,7 @@ function Library:CreateWindow(opts)
         BackgroundColor3 = C.WindowBg, ClipsDescendants = true,
         Visible = not loadingEnabled, ZIndex = 2, Parent = container,
     })
-    corner(main, 16); stroke(main, C.Border)
-    local topAccent = make("Frame", {
-        Name = "AkazTopAccent", Position = UDim2.fromOffset(18, 0),
-        Size = UDim2.new(1, -36, 0, 2), BackgroundColor3 = C.Accent,
-        BackgroundTransparency = 0.15, ZIndex = 20, Parent = main,
-    })
-    corner(topAccent, 2)
-    make("UIGradient", {
-        Transparency = NumberSequence.new({
-            NumberSequenceKeypoint.new(0, 1),
-            NumberSequenceKeypoint.new(0.18, 0.25),
-            NumberSequenceKeypoint.new(0.5, 0),
-            NumberSequenceKeypoint.new(0.82, 0.25),
-            NumberSequenceKeypoint.new(1, 1),
-        }), Parent = topAccent,
-    })
+    corner(main, 12); stroke(main, C.Border)
 
     -- Animated traveling outline
     local mainGlowStroke = make("UIStroke", {
@@ -2206,7 +2187,7 @@ function Library:CreateWindow(opts)
         Visible = not loadingEnabled,
         ZIndex = 3, Parent = container,
     })
-    corner(hotbar, 13)
+    corner(hotbar, 11)
     -- Border is white and driven entirely by the gradient below: accent at the
     -- left and right ends, normal border colour through the middle. The
     -- Theme_Color tag has to go, otherwise SetTheme would repaint the white
@@ -2251,20 +2232,20 @@ function Library:CreateWindow(opts)
 
     local controls = make("Frame", {
         Name = "CornerControls", AnchorPoint = Vector2.new(1,0),
-        Position = UDim2.new(1,-6,0,8), Size = UDim2.fromOffset(42,18),
+        Position = UDim2.new(1,-6,0,8), Size = UDim2.fromOffset(36,16),
         BackgroundTransparency = 1, ZIndex = 10, Parent = main,
     })
     local closeBtn = make("TextButton", {
         Text = "", Font = Enum.Font.GothamBold, TextSize = 1, TextColor3 = C.White,
         AnchorPoint = Vector2.new(1,0), Position = UDim2.new(1,0,0,0),
-        Size = UDim2.fromOffset(15,15), BackgroundColor3 = Color3.fromRGB(190,60,60),
+        Size = UDim2.fromOffset(14,14), BackgroundColor3 = Color3.fromRGB(190,60,60),
         ZIndex = 12, Parent = controls,
     })
     closeBtn.AutoButtonColor = false; circle(closeBtn); closeBtn.BorderSizePixel = 0
     local minimizeBtn = make("TextButton", {
         Text = "", Font = Enum.Font.GothamBold, TextSize = 1, TextColor3 = C.White,
         AnchorPoint = Vector2.new(1,0), Position = UDim2.new(0,12,0,0),
-        Size = UDim2.fromOffset(15,15), BackgroundColor3 = Color3.fromRGB(240,184,54),
+        Size = UDim2.fromOffset(14,14), BackgroundColor3 = Color3.fromRGB(255,195,0),
         ZIndex = 12, Parent = controls,
     })
     minimizeBtn.AutoButtonColor = false; circle(minimizeBtn); minimizeBtn.BorderSizePixel = 0
@@ -2429,19 +2410,15 @@ function Library:CreateWindow(opts)
         else if screenGui then screenGui:Destroy() end end
     end)
     minimizeBtn.MouseButton1Click:Connect(function() setMinimized(true) end)
-    closeBtn.MouseEnter:Connect(function() tween(closeBtn, { BackgroundColor3 = Color3.fromRGB(224, 78, 78) }) end)
-    closeBtn.MouseLeave:Connect(function() tween(closeBtn, { BackgroundColor3 = Color3.fromRGB(190, 60, 60) }) end)
-    minimizeBtn.MouseEnter:Connect(function() tween(minimizeBtn, { BackgroundColor3 = Color3.fromRGB(255, 203, 72) }) end)
-    minimizeBtn.MouseLeave:Connect(function() tween(minimizeBtn, { BackgroundColor3 = Color3.fromRGB(240, 184, 54) }) end)
     local onDragStart, onDragEnd
     local dragConn = makeDraggable(container, noDrag,
         function() if onDragStart then onDragStart() end end,
         function() if onDragEnd then onDragEnd() end end)
 
     -- ── SIDEBAR ───────────────────────────────────────────────────────────
-    local sidebar = make("Frame", { Size=UDim2.new(0,204,1,0), BackgroundTransparency=1, Parent=main })
-    local brand = make("Frame", { Name="Brand", Position=UDim2.fromOffset(12,12), Size=UDim2.new(1,-24,0,68), BackgroundColor3=C.White, Parent=sidebar })
-    corner(brand,12); stroke(brand,C.Border)
+    local sidebar = make("Frame", { Size=UDim2.new(0,190,1,0), BackgroundTransparency=1, Parent=main })
+    local brand = make("Frame", { Name="Brand", Position=UDim2.fromOffset(12,12), Size=UDim2.new(1,-24,0,64), BackgroundColor3=C.White, Parent=sidebar })
+    corner(brand,10); stroke(brand,C.Border)
     -- Smooth light-blue to gray transition over the whole card, blue at the
     -- bottom. The blue is muted (Strength < 1 blends it back toward the gray)
     -- so it stays a subtle tint. The frame must be white because a UIGradient
@@ -2484,18 +2461,44 @@ function Library:CreateWindow(opts)
     -- the Akaz mark lands at ~88% of this box without any of it being cut off.
     local logoHolder = make("Frame", { Position=UDim2.fromOffset(11,12), Size=UDim2.fromOffset(40,40), BackgroundTransparency=1, ClipsDescendants=true, Parent=brand })
     local brandLogo = make("ImageLabel",{Name="Logo",Image=logoAsset,BackgroundTransparency=1,AnchorPoint=Vector2.new(0.5,0.5),Position=UDim2.fromScale(0.5,0.5),Size=UDim2.fromScale(logoZoom,logoZoom),ScaleType=Enum.ScaleType.Fit,Parent=logoHolder})
-    make("TextLabel",{Text=opts.Name or "Akaz Hub",Font=Enum.Font.GothamBold,TextSize=15,TextColor3=C.White,TextXAlignment=Enum.TextXAlignment.Left,TextTruncate=Enum.TextTruncate.AtEnd,BackgroundTransparency=1,Position=UDim2.fromOffset(58,15),Size=UDim2.new(1,-66,0,17),Parent=brand})
-    make("TextLabel",{Text=opts.BrandSubtitle or ("AKAZ HUB • v"..Library.Version),Font=Enum.Font.GothamMedium,TextSize=9,TextColor3=C.TextDim,TextXAlignment=Enum.TextXAlignment.Left,TextTruncate=Enum.TextTruncate.AtEnd,BackgroundTransparency=1,Position=UDim2.fromOffset(58,38),Size=UDim2.new(1,-66,0,13),Parent=brand})
+    make("TextLabel",{Text=opts.Name or "Akaz Hub",Font=Enum.Font.GothamBold,TextSize=13,TextColor3=C.White,TextXAlignment=Enum.TextXAlignment.Left,TextTruncate=Enum.TextTruncate.AtEnd,BackgroundTransparency=1,Position=UDim2.fromOffset(58,16),Size=UDim2.new(1,-66,0,17),Parent=brand})
+    make("TextLabel",{Text=opts.BrandSubtitle or ("AKAZ HUB • v"..Library.Version),Font=Enum.Font.GothamMedium,TextSize=9,TextColor3=C.TextDim,TextXAlignment=Enum.TextXAlignment.Left,TextTruncate=Enum.TextTruncate.AtEnd,BackgroundTransparency=1,Position=UDim2.fromOffset(58,35),Size=UDim2.new(1,-66,0,13),Parent=brand})
 
     -- Player mini-card (fills the sidebar and gives identity at a glance)
     local lp = Players.LocalPlayer
-    local pcard = make("Frame",{Name="PlayerCard",Position=UDim2.fromOffset(12,92),Size=UDim2.new(1,-24,0,56),BackgroundColor3=C.CardBg,Parent=sidebar})
-    corner(pcard,12); stroke(pcard,C.Border)
-    local avH = make("Frame",{Position=UDim2.fromOffset(8,8),Size=UDim2.fromOffset(36,36),BackgroundColor3=C.Element,Parent=pcard}); corner(avH,8)
+    local pcard = make("Frame",{Name="PlayerCard",Position=UDim2.fromOffset(12,88),Size=UDim2.new(1,-24,0,76),BackgroundColor3=C.CardBg,Parent=sidebar})
+    corner(pcard,10); stroke(pcard,C.Border)
+    local avH = make("Frame",{Position=UDim2.fromOffset(8,20),Size=UDim2.fromOffset(36,36),BackgroundColor3=C.Element,Parent=pcard}); corner(avH,8)
     local avImg = make("ImageLabel",{Image="rbxthumb://type=AvatarHeadShot&id="..lp.UserId.."&w=150&h=150",BackgroundTransparency=1,Size=UDim2.fromScale(1,1),ScaleType=Enum.ScaleType.Crop,Parent=avH}); corner(avImg,8)
     local avRing = stroke(avH,C.Accent); avRing.Transparency=0.4
-    make("TextLabel",{Text=lp.DisplayName,Font=Enum.Font.GothamBold,TextSize=12,TextColor3=C.White,TextXAlignment=Enum.TextXAlignment.Left,TextTruncate=Enum.TextTruncate.AtEnd,BackgroundTransparency=1,Position=UDim2.fromOffset(52,10),Size=UDim2.new(1,-60,0,15),Parent=pcard})
-    make("TextLabel",{Text="@"..lp.Name,Font=Enum.Font.Gotham,TextSize=10,TextColor3=C.TextDim,TextXAlignment=Enum.TextXAlignment.Left,TextTruncate=Enum.TextTruncate.AtEnd,BackgroundTransparency=1,Position=UDim2.fromOffset(52,28),Size=UDim2.new(1,-60,0,13),Parent=pcard})
+    make("TextLabel",{Text=lp.DisplayName,Font=Enum.Font.GothamBold,TextSize=12,TextColor3=C.White,TextXAlignment=Enum.TextXAlignment.Left,TextTruncate=Enum.TextTruncate.AtEnd,BackgroundTransparency=1,Position=UDim2.fromOffset(52,9),Size=UDim2.new(1,-60,0,15),Parent=pcard})
+    make("TextLabel",{Text="@"..lp.Name,Font=Enum.Font.Gotham,TextSize=10,TextColor3=C.TextDim,TextXAlignment=Enum.TextXAlignment.Left,TextTruncate=Enum.TextTruncate.AtEnd,BackgroundTransparency=1,Position=UDim2.fromOffset(52,27),Size=UDim2.new(1,-60,0,13),Parent=pcard})
+
+    local discordBtn = make("TextButton",{Name="DiscordButton",Text="",AutoButtonColor=false,Position=UDim2.fromOffset(50,45),Size=UDim2.new(1,-58,0,22),BackgroundColor3=C.Element,Parent=pcard})
+    corner(discordBtn,6); stroke(discordBtn,C.Border)
+    local discordIcon = make("ImageLabel",{Image=AKAZ_DISCORD_LOGO_URL,BackgroundTransparency=1,Position=UDim2.fromOffset(6,4),Size=UDim2.fromOffset(14,14),ScaleType=Enum.ScaleType.Fit,ImageColor3=C.TextGray,Parent=discordBtn})
+    local discordLabel = make("TextLabel",{Text="Discord",Font=Enum.Font.GothamMedium,TextSize=10,TextColor3=C.TextGray,TextXAlignment=Enum.TextXAlignment.Left,BackgroundTransparency=1,Position=UDim2.fromOffset(25,0),Size=UDim2.new(1,-31,1,0),Parent=discordBtn})
+    discordBtn.MouseEnter:Connect(function()
+        tween(discordBtn,{BackgroundColor3=C.ElementHover})
+        tween(discordLabel,{TextColor3=C.White})
+        tween(discordIcon,{ImageColor3=C.White})
+    end)
+    discordBtn.MouseLeave:Connect(function()
+        tween(discordBtn,{BackgroundColor3=C.Element})
+        tween(discordLabel,{TextColor3=C.TextGray})
+        tween(discordIcon,{ImageColor3=C.TextGray})
+    end)
+    discordBtn.MouseButton1Click:Connect(function()
+        local clipboard = (typeof(setclipboard) == "function" and setclipboard)
+            or (typeof(toclipboard) == "function" and toclipboard)
+            or (typeof(set_clipboard) == "function" and set_clipboard)
+            or (typeof(writeclipboard) == "function" and writeclipboard)
+        local copied = clipboard and pcall(clipboard, DISCORD_INVITE_URL)
+        discordLabel.Text = copied and "Invite copied" or "Copy unavailable"
+        task.delay(1.25,function()
+            if discordLabel and discordLabel.Parent then discordLabel.Text = "Discord" end
+        end)
+    end)
 
     -- Faint centered logo watermark fills the otherwise empty sidebar space.
     -- The box is sized so the mark itself lands around 113px tall (about 60% of
@@ -2575,12 +2578,9 @@ function Library:CreateWindow(opts)
 
     local watermark = make("ImageLabel",{Name="WatermarkImage",Image=logoAsset,BackgroundTransparency=1,ImageTransparency=0.9,AnchorPoint=Vector2.new(0.5,0.5),Position=UDim2.fromScale(0.5,0.5),Size=UDim2.fromScale(logoZoom,logoZoom),ScaleType=Enum.ScaleType.Fit,ZIndex=3,Parent=watermarkHolder})
 
-    local statusDot = make("Frame",{AnchorPoint=Vector2.new(0,0.5),Position=UDim2.new(0,16,1,-19),Size=UDim2.fromOffset(6,6),BackgroundColor3=NOTIFICATION_STYLES.success.Color,Parent=sidebar})
-    circle(statusDot)
-    make("TextLabel",{Text=opts.StatusText or "Akaz Hub is ready",Font=Enum.Font.GothamMedium,TextSize=10,TextColor3=C.TextDim,TextXAlignment=Enum.TextXAlignment.Left,BackgroundTransparency=1,Position=UDim2.new(0,28,1,-27),Size=UDim2.new(1,-40,0,16),Parent=sidebar})
-    local divLine=make("Frame",{Position=UDim2.fromOffset(204,0),Size=UDim2.new(0,1,1,0),BackgroundColor3=C.Accent,Parent=main})
+    local divLine=make("Frame",{Position=UDim2.fromOffset(190,0),Size=UDim2.new(0,1,1,0),BackgroundColor3=C.Accent,Parent=main})
     make("UIGradient",{Rotation=90,Transparency=NumberSequence.new({NumberSequenceKeypoint.new(0,1),NumberSequenceKeypoint.new(0.5,0.5),NumberSequenceKeypoint.new(1,1)}),Parent=divLine})
-    local content = make("Frame",{Position=UDim2.fromOffset(205,0),Size=UDim2.new(1,-205,1,0),BackgroundTransparency=1,Parent=main})
+    local content = make("Frame",{Position=UDim2.fromOffset(191,0),Size=UDim2.new(1,-191,1,0),BackgroundTransparency=1,Parent=main})
 
     -- ── DRAG FADE: smoothly hide inner content while dragging the window ──
     -- The window frame (background + border + traveling glow) stays visible;
@@ -2656,7 +2656,7 @@ function Library:CreateWindow(opts)
     local musicConns    = {}     -- connections appended to windowRef._connections
 
     local profilePanel = make("CanvasGroup",{Name="UserProfile",AnchorPoint=Vector2.new(1,1),Position=profileClosedPos,Size=UDim2.fromOffset(profileWidth,382),BackgroundColor3=C.CardBg,GroupTransparency=1,ClipsDescendants=true,ZIndex=150,Parent=screenGui})
-    corner(profilePanel,16)
+    corner(profilePanel,14)
     local profileHeader=make("Frame",{Position=UDim2.fromOffset(0,0),Size=UDim2.new(1,0,0,65),BackgroundTransparency=1,ZIndex=151,Parent=profilePanel})
     make("TextLabel",{Text=opts.ProfileTitle or "PLAYER PROFILE",Font=Enum.Font.GothamBold,TextSize=13,TextColor3=C.White,TextXAlignment=Enum.TextXAlignment.Left,BackgroundTransparency=1,Position=UDim2.fromOffset(18,13),Size=UDim2.new(1,-36,0,18),ZIndex=152,Parent=profileHeader})
     make("TextLabel",{Text="Live session overview",Font=Enum.Font.Gotham,TextSize=10,TextColor3=C.TextDim,TextXAlignment=Enum.TextXAlignment.Left,BackgroundTransparency=1,Position=UDim2.fromOffset(18,34),Size=UDim2.new(1,-36,0,15),ZIndex=152,Parent=profileHeader})
@@ -2705,7 +2705,7 @@ function Library:CreateWindow(opts)
     local performanceClosedPos = UDim2.new(1,performanceWidth+36,1,-bottomMargin)
 
     local performancePanel=make("CanvasGroup",{Name="LivePerformance",AnchorPoint=Vector2.new(1,1),Position=performanceClosedPos,Size=UDim2.fromOffset(performanceWidth,performanceHeight),BackgroundColor3=C.CardBg,GroupTransparency=1,ClipsDescendants=true,ZIndex=149,Parent=screenGui})
-    corner(performancePanel,16)
+    corner(performancePanel,14)
     local performanceHeader=make("Frame",{Size=UDim2.new(1,0,0,56),BackgroundTransparency=1,ZIndex=150,Parent=performancePanel})
     make("TextLabel",{Text=opts.PerformanceTitle or "LIVE PERFORMANCE",Font=Enum.Font.GothamBold,TextSize=12,TextColor3=C.White,TextXAlignment=Enum.TextXAlignment.Left,BackgroundTransparency=1,Position=UDim2.fromOffset(16,11),Size=UDim2.new(1,-94,0,17),ZIndex=151,Parent=performanceHeader})
     make("TextLabel",{Text="Real-time frame tracker",Font=Enum.Font.Gotham,TextSize=9,TextColor3=C.TextDim,TextXAlignment=Enum.TextXAlignment.Left,BackgroundTransparency=1,Position=UDim2.fromOffset(16,31),Size=UDim2.new(1,-94,0,13),ZIndex=151,Parent=performanceHeader})
@@ -3252,6 +3252,7 @@ function Library:CreateWindow(opts)
         _connections={}, _noDrag=noDrag, _tabs={}, _activeTab=nil,
         _containerScale=containerScale, _uiVisible=true, _toggleKey=toggleKey,
         _destroyed=false,
+        _clearLoadingBlur=clearLoadingBlur,
     }, Window)
     windowRef.Notify=function(s,m) return Window.Notify(windowRef,s==windowRef and m or s) end
     windowRef.Notification=windowRef.Notify
@@ -3445,7 +3446,7 @@ function Library:CreateWindow(opts)
             if loadingSound then TweenService:Create(loadingSound,TweenInfo.new(0.3),{Volume=0}):Play() end
             fo.Completed:Wait()
             if loadingLayer and loadingLayer.Parent then loadingLayer:Destroy() end
-            pcall(function() if loadingBlur then loadingBlur:Destroy() end end)
+            clearLoadingBlur()
             pcall(function() if loadingSound then loadingSound:Stop(); loadingSound:Destroy() end end)
             if not screenGui.Parent then return end; loadingComplete=true
         end)
@@ -3512,9 +3513,9 @@ function Window:Notify(opts)
     self._notificationOrder=self._notificationOrder+1
     local title=tostring(opts.Title or style.Name)
     local body =tostring(opts.Content or opts.Description or opts.Message or "Notification")
-    local slot=make("Frame",{Name="NotificationSlot",Size=UDim2.new(1,0,0,68),BackgroundTransparency=1,LayoutOrder=self._notificationOrder,ZIndex=200,Parent=holder})
+    local slot=make("Frame",{Name="NotificationSlot",Size=UDim2.new(1,0,0,62),BackgroundTransparency=1,LayoutOrder=self._notificationOrder,ZIndex=200,Parent=holder})
     local card=make("CanvasGroup",{Name=style.Name.."Notification",AnchorPoint=Vector2.new(1,0),Position=UDim2.new(1,12,0,0),Size=UDim2.fromScale(1,1),BackgroundColor3=C.White,GroupTransparency=1,ClipsDescendants=true,ZIndex=201,Parent=slot})
-    corner(card,10);stroke(card,C.Border)
+    corner(card,6);stroke(card,C.Border)
     -- Same look as the brand card: muted blue-to-gray fade (blue at the
     -- bottom) plus the diagonal blue-white shimmer sweep. The frame must be
     -- white because a UIGradient multiplies instead of replacing.
@@ -3581,6 +3582,7 @@ end
 
 function Window:Destroy()
     self._destroyed = true
+    if self._clearLoadingBlur then pcall(self._clearLoadingBlur) end
     for _,c in ipairs(self._connections or {}) do pcall(function() c:Disconnect() end) end
     table.clear(self._connections or {})
     if self._fpsEditableImage then pcall(function() self._fpsEditableImage:Destroy() end); self._fpsEditableImage=nil end
@@ -3661,14 +3663,14 @@ function Window:AddTab(opts)
     circle(hDot)
 
     local page=make("Frame",{Size=UDim2.fromScale(1,1),BackgroundTransparency=1,Visible=false,Parent=self._content})
-    local header=make("Frame",{Size=UDim2.new(1,0,0,92),BackgroundTransparency=1,Parent=page})
+    local header=make("Frame",{Size=UDim2.new(1,0,0,88),BackgroundTransparency=1,Parent=page})
 
     local headerBadge=make("Frame",{Size=UDim2.fromOffset(32,32),Position=UDim2.fromOffset(14,14),BackgroundTransparency=1,Parent=header})
     local headerIconElement = createIconElement(headerBadge, iconType, iconValue, 26, 3)
     if headerIconElement:IsA("ImageLabel") then headerIconElement.ImageColor3=C.White
     elseif headerIconElement:IsA("TextLabel") then headerIconElement.TextColor3=C.White end
 
-    make("TextLabel",{Text=name,Font=Enum.Font.GothamBold,TextSize=15,TextColor3=C.White,TextXAlignment=Enum.TextXAlignment.Left,BackgroundTransparency=1,Position=UDim2.fromOffset(54,17),Size=UDim2.new(1,-70,0,14),Parent=header})
+    make("TextLabel",{Text=name,Font=Enum.Font.GothamBold,TextSize=14,TextColor3=C.White,TextXAlignment=Enum.TextXAlignment.Left,BackgroundTransparency=1,Position=UDim2.fromOffset(54,17),Size=UDim2.new(1,-70,0,14),Parent=header})
     make("TextLabel",{Text=opts.Subtitle or "",Font=Enum.Font.Gotham,TextSize=11,TextColor3=C.TextDim,TextXAlignment=Enum.TextXAlignment.Left,BackgroundTransparency=1,Position=UDim2.fromOffset(54,33),Size=UDim2.new(1,-70,0,12),Parent=header})
     local pillBar=make("Frame",{Position=UDim2.fromOffset(16,54),Size=UDim2.new(1,-32,0,24),BackgroundTransparency=1,ClipsDescendants=true,Parent=header})
     local pillScrollLeft=make("TextButton",{Text="‹",Font=Enum.Font.GothamBold,TextSize=18,TextColor3=C.TextGray,Size=UDim2.fromOffset(20,24),BackgroundColor3=C.WindowBg,Visible=false,Parent=pillBar})
@@ -3680,7 +3682,7 @@ function Window:AddTab(opts)
     local pillScrollRight=make("TextButton",{Text="›",Font=Enum.Font.GothamBold,TextSize=18,TextColor3=C.TextGray,AnchorPoint=Vector2.new(1,0),Position=UDim2.new(1,0,0,0),Size=UDim2.fromOffset(20,24),BackgroundColor3=C.WindowBg,Visible=false,Parent=pillBar})
     corner(pillScrollRight,6); table.insert(win._noDrag,pillScrollRight)
     make("Frame",{Position=UDim2.new(0,0,1,-1),Size=UDim2.new(1,0,0,1),BackgroundColor3=C.Border,Parent=header})
-    local pagesHolder=make("Frame",{Position=UDim2.fromOffset(0,92),Size=UDim2.new(1,0,1,-92),BackgroundTransparency=1,Parent=page})
+    local pagesHolder=make("Frame",{Position=UDim2.fromOffset(0,88),Size=UDim2.new(1,0,1,-88),BackgroundTransparency=1,Parent=page})
 
     local tab=setmetatable({
         _window=win,

@@ -294,6 +294,69 @@ local function safeHex(value)
     return ok and result or nil
 end
 
+-- Universal button press feedback: every TextButton/ImageButton gets the same
+-- subtle physical press animation, including the red close button, orange minimize
+-- button, sidebar tabs, dropdowns, music controls, Discord button, etc.
+local function addPressEffect(inst)
+    if not inst:IsA("GuiButton") then return end
+    if inst:GetAttribute("AkazPressEffect") then return end
+    inst:SetAttribute("AkazPressEffect", true)
+
+    local scale = inst:FindFirstChild("AkazPressScale")
+    if not scale or not scale:IsA("UIScale") then
+        scale = Instance.new("UIScale")
+        scale.Name = "AkazPressScale"
+        scale.Scale = 1
+        scale.Parent = inst
+    end
+
+    local pressed = false
+    local pressTween
+
+    local function animate(target, duration)
+        if pressTween then
+            pcall(function() pressTween:Cancel() end)
+        end
+        pressTween = TweenService:Create(
+            scale,
+            TweenInfo.new(duration or 0.09, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
+            { Scale = target }
+        )
+        pressTween:Play()
+    end
+
+    inst.MouseButton1Down:Connect(function()
+        pressed = true
+        animate(0.94, 0.07)
+    end)
+
+    inst.MouseButton1Up:Connect(function()
+        pressed = false
+        animate(1, 0.12)
+    end)
+
+    inst.MouseLeave:Connect(function()
+        if pressed then
+            pressed = false
+            animate(1, 0.12)
+        end
+    end)
+
+    inst.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.Touch then
+            pressed = true
+            animate(0.94, 0.07)
+        end
+    end)
+
+    inst.InputEnded:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.Touch then
+            pressed = false
+            animate(1, 0.12)
+        end
+    end)
+end
+
 local function make(className, props)
     local inst = Instance.new(className)
     if inst:IsA("GuiObject") then
@@ -330,6 +393,9 @@ local function make(className, props)
         if key then inst:SetAttribute("Theme_Color", key) end
     end
     inst.Parent = props.Parent
+    if inst:IsA("GuiButton") then
+        addPressEffect(inst)
+    end
     return inst
 end
 
@@ -2353,19 +2419,92 @@ function Library:CreateWindow(opts)
     })
 
     local minimized = false
+    local minimizeAnimating = false
+    local restoredContainerPosition = container.Position
     local mainTopButtons = {}
     local burgerButton
+    local burgerScale
+    local pillStroke
     local windowRef
     local noDrag = {}
     table.insert(noDrag, hotbar)
 
+    -- Smoothly morph the full window into the minimized pill (and back).
+    -- The container is the common visual root, so scaling it keeps the entire
+    -- window/hotbar moving together instead of snapping individual elements.
+    local MINIMIZE_SCALE = 0.095
+    local MINIMIZE_IN = TweenInfo.new(0.34, Enum.EasingStyle.Quart, Enum.EasingDirection.In)
+    local MINIMIZE_OUT = TweenInfo.new(0.42, Enum.EasingStyle.Quart, Enum.EasingDirection.Out)
+
+    local function getPillCenter()
+        if not burgerButton or not burgerButton.Parent then return nil end
+        local pos = burgerButton.AbsolutePosition
+        local size = burgerButton.AbsoluteSize
+        return Vector2.new(pos.X + size.X * 0.5, pos.Y + size.Y * 0.5)
+    end
+
     local function setMinimized(o)
-        minimized = o == true
-        for _, b in ipairs(mainTopButtons) do if b and b.Parent then b.Visible = not minimized end end
-        if burgerButton and burgerButton.Parent then burgerButton.Visible = minimized end
-        main.Visible = not minimized
-        hotbar.Visible = not minimized
+        local targetState = o == true
+        if minimizeAnimating or targetState == minimized then return end
+        minimizeAnimating = true
+
+        if targetState then
+            -- Remember exactly where the user left the window (including a drag).
+            restoredContainerPosition = container.Position
+            for _, b in ipairs(mainTopButtons) do if b and b.Parent then b.Visible = false end end
+            main.Visible = true
+            hotbar.Visible = true
+
+            -- Reveal the destination first, then travel toward it.
+            if burgerButton and burgerButton.Parent then
+                burgerButton.Visible = true
+                burgerButton.BackgroundTransparency = 1
+                if not burgerScale then burgerScale = make("UIScale", {Scale = 0.72, Parent = burgerButton}) end
+                burgerScale.Scale = 0.72
+                if pillStroke then pillStroke.Transparency = 1 end
+                task.wait()
+            end
+
+            local center = getPillCenter()
+            if center then
+                local targetPos = UDim2.fromOffset(math.floor(center.X + 0.5), math.floor(center.Y + 0.5))
+                local moveTween = TweenService:Create(container, MINIMIZE_IN, {Position = targetPos})
+                local scaleTween = TweenService:Create(containerScale, MINIMIZE_IN, {Scale = MINIMIZE_SCALE})
+                moveTween:Play(); scaleTween:Play()
+                TweenService:Create(burgerScale, TweenInfo.new(0.28, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {Scale = 1}):Play()
+                TweenService:Create(burgerButton, TweenInfo.new(0.24, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {BackgroundTransparency = 0}):Play()
+                if pillStroke then TweenService:Create(pillStroke, TweenInfo.new(0.24, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {Transparency = 0}):Play() end
+                moveTween.Completed:Wait()
+            end
+
+            main.Visible = false
+            hotbar.Visible = false
+            minimized = true
+        else
+            -- Hide the pill as the window starts expanding, so the restore reads
+            -- as one continuous movement from the pill back to the saved window.
+            if burgerButton and burgerButton.Parent then
+                TweenService:Create(burgerButton, TweenInfo.new(0.12, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {BackgroundTransparency = 1}):Play()
+                if pillStroke then TweenService:Create(pillStroke, TweenInfo.new(0.12, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {Transparency = 1}):Play() end
+                if not burgerScale then burgerScale = make("UIScale", {Scale = 0.82, Parent = burgerButton}) else burgerScale.Scale = 0.82 end
+            end
+
+            main.Visible = true
+            hotbar.Visible = true
+            container.Position = container.Position
+            containerScale.Scale = MINIMIZE_SCALE
+            local moveTween = TweenService:Create(container, MINIMIZE_OUT, {Position = restoredContainerPosition})
+            local scaleTween = TweenService:Create(containerScale, MINIMIZE_OUT, {Scale = 1})
+            moveTween:Play(); scaleTween:Play()
+            moveTween.Completed:Wait()
+
+            minimized = false
+            for _, b in ipairs(mainTopButtons) do if b and b.Parent then b.Visible = true end end
+            if burgerButton and burgerButton.Parent then burgerButton.Visible = false end
+        end
+
         if windowRef then windowRef._minimized = minimized end
+        minimizeAnimating = false
     end
 
     local controls = make("Frame", {
@@ -2398,7 +2537,7 @@ function Library:CreateWindow(opts)
         Visible = false, ZIndex = 200, Parent = screenGui,
     })
     corner(burgerButton, 16)
-    local pillStroke = stroke(burgerButton, Color3.fromRGB(38, 38, 38), 1)
+    pillStroke = stroke(burgerButton, Color3.fromRGB(38, 38, 38), 1)
 
     make("UIListLayout", {
         SortOrder = Enum.SortOrder.LayoutOrder,
@@ -2545,6 +2684,12 @@ function Library:CreateWindow(opts)
     closeBtn.MouseButton1Click:Connect(function()
         if windowRef and windowRef.Destroy then windowRef:Destroy()
         else if screenGui then screenGui:Destroy() end end
+    end)
+    minimizeBtn.MouseButton1Down:Connect(function()
+        tween(minimizeBtn, {Size = UDim2.fromOffset(12,12)})
+    end)
+    minimizeBtn.MouseButton1Up:Connect(function()
+        tween(minimizeBtn, {Size = UDim2.fromOffset(14,14)})
     end)
     minimizeBtn.MouseButton1Click:Connect(function() setMinimized(true) end)
     local onDragStart, onDragEnd

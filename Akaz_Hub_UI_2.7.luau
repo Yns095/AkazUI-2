@@ -10,6 +10,9 @@ local HttpService      = game:GetService("HttpService")
 local Workspace        = game:GetService("Workspace")
 
 local AKAZ_LOGO_URL = "https://raw.githubusercontent.com/Yns095/AkazUI-2/main/image-removebg-preview%20(1).png"
+-- Roblox ImageLabel normally expects an uploaded Roblox asset id (or an executor-local
+-- custom asset). Keep the GitHub URL as the source reference, but set DEFAULT_LOGO to
+-- an rbxassetid://... value in production when the PNG has been uploaded to Roblox.
 local AKAZ_DISCORD_LOGO_URL = "https://raw.githubusercontent.com/Yns095/AkazUI-2/main/image-removebg-preview%20(2).png"
 local DISCORD_INVITE_URL = "https://discord.gg/PCep5XRFS4"
 local DEFAULT_LOGO = AKAZ_LOGO_URL
@@ -2006,9 +2009,9 @@ function Library:CreateWindow(opts)
     -- ── LOADING SCREEN (slam-in intro, themed with the accent colour) ─────
     local loadingEnabled      = opts.LoadingAnimation ~= false
     local loadingDuration     = math.clamp(tonumber(opts.LoadingDuration) or 1.2, 0.4, 8)
-    local loadingText         = tostring(opts.LoadingText or opts.Name or "Arc")
+    local loadingText         = tostring(opts.LoadingText or "AKAZ")
     local loadingSub          = tostring(opts.LoadingSubtitle or "HUB")
-    local loadingFooter       = tostring(opts.LoadingFooter or "Arc HUB")
+    local loadingFooter       = tostring(opts.LoadingFooter or "AKAZ HUB")
     local overlayTransparency = math.clamp(tonumber(opts.LoadingOverlayTransparency) or 0.35, 0, 0.9)
 
     -- accent palette derived from the active theme
@@ -2071,12 +2074,14 @@ function Library:CreateWindow(opts)
             pcall(function() loadingSound.Parent = SoundService end)
         end
 
+        -- Render the loader labels from a large logical canvas.
+        -- Fixed TextSize avoids relying on TextScaled inside a tiny 80x36 box.
         local function sideLabel(anchorX)
             local lbl = make("TextLabel", {
-                Size = UDim2.fromOffset(260, 54), Position = UDim2.new(anchorX, 0, 0.5, -27),
+                Size = UDim2.fromOffset(520, 108), Position = UDim2.new(anchorX, 0, 0.5, -54),
                 AnchorPoint = Vector2.new(0.5, 0.5), BackgroundTransparency = 1,
-                Text = loadingText, Font = Enum.Font.GothamBlack, TextScaled = true,
-                TextColor3 = C.White, TextStrokeColor3 = Color3.fromRGB(0, 0, 0), TextStrokeTransparency = 0.45,
+                Text = loadingText, Font = Enum.Font.GothamBlack, TextSize = 72,
+                TextWrapped = false, TextColor3 = C.White, TextStrokeColor3 = Color3.fromRGB(0, 0, 0), TextStrokeTransparency = 0.45,
                 TextTransparency = 1, ZIndex = 508, Parent = loadingLayer,
             })
             make("UIGradient", { Color = ColorSequence.new({
@@ -2090,14 +2095,16 @@ function Library:CreateWindow(opts)
         local rightLbl = sideLabel(0.82)
 
         local mainWrap = make("Frame", {
-            AnchorPoint = Vector2.new(0.5, 0.5), Size = UDim2.fromOffset(80, 36),
+            AnchorPoint = Vector2.new(0.5, 0.5), Size = UDim2.fromOffset(640, 180),
             Position = UDim2.new(0.5, 0, 0.5, -20), BackgroundTransparency = 1, ZIndex = 510, Parent = loadingLayer,
         })
+        local mainScale = make("UIScale", { Scale = 1, Parent = mainWrap })
         local tag = make("TextLabel", {
             Size = UDim2.fromScale(1, 1), BackgroundTransparency = 1, Text = loadingText,
-            Font = Enum.Font.GothamBlack, TextScaled = true, TextColor3 = C.White,
+            Font = Enum.Font.GothamBlack, TextSize = 104, TextWrapped = false, TextColor3 = C.White,
             TextStrokeColor3 = Color3.fromRGB(0, 0, 0), TextStrokeTransparency = 0.3,
-            TextXAlignment = Enum.TextXAlignment.Center, TextTransparency = 1, ZIndex = 510, Parent = mainWrap,
+            TextXAlignment = Enum.TextXAlignment.Center, TextYAlignment = Enum.TextYAlignment.Center,
+            TextTransparency = 1, ZIndex = 510, Parent = mainWrap,
         })
         local tagGrad = make("UIGradient", { Rotation = 0, Color = ColorSequence.new({
             ColorSequenceKeypoint.new(0, ACC_DARK),

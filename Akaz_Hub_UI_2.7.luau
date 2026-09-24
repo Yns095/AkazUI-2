@@ -7,6 +7,7 @@ local RunService       = game:GetService("RunService")
 local AssetService     = game:GetService("AssetService")
 local TextService      = game:GetService("TextService")
 local HttpService      = game:GetService("HttpService")
+local SoundService     = game:GetService("SoundService")
 local Workspace        = game:GetService("Workspace")
 
 local AKAZ_LOGO_URL = "https://raw.githubusercontent.com/Yns095/AkazUI-2/main/image-removebg-preview%20(1).png"
@@ -23,7 +24,7 @@ local PROFILE_TWEEN = TweenInfo.new(0.32, Enum.EasingStyle.Quart, Enum.EasingDir
 -- ════════════════════════════════════════════════════════════════════════════
 -- BUILT-IN ICON LIBRARY
 -- ════════════════════════════════════════════════════════════════════════════
-local ICONPACK_SOURCE = "https://raw.githubusercontent.com/xxpwnxxx420lord/Scripts/refs/heads/main/iconpack.lua"
+local ICONPACK_SOURCE = "https://raw.githubusercontent.com/xxpwnxxx420lord/Scripts/refs/heads/main/iconpack.lua" -- source: supplied icon pack
 
 -- Icon IDs are sourced from the supplied iconpack.lua.
 -- The pack uses Roblox asset IDs, which keeps the UI icons crisp and consistent.
@@ -74,6 +75,7 @@ local ICONS = {
     like            = "rbxassetid://86002618026030",
     bell            = "rbxassetid://123130994927055",
     notification    = "rbxassetid://123130994927055",
+    discordFallback  = "rbxassetid://102007663529414",  -- messages-square
     alert           = "rbxassetid://72204937258553",
     info            = "rbxassetid://126633647239092",
     about           = "rbxassetid://126633647239092",
@@ -432,13 +434,40 @@ local function normalizeAssetId(value)
     return id and ("rbxassetid://" .. id) or DEFAULT_LOGO
 end
 
+local function isImageAsset(asset)
+    local s = tostring(asset or "")
+    return s:match("^rbxassetid://") ~= nil
+        or s:match("^rbxthumb://") ~= nil
+        or s:match("^rbxasset://") ~= nil
+        or s:match("^rbxgameasset://") ~= nil
+end
+
+local function fetchRemoteBody(url)
+    local ok, body = pcall(function()
+        return game:HttpGet(url)
+    end)
+    if ok and type(body) == "string" and #body > 16 then
+        return body
+    end
+
+    local env = (type(getgenv) == "function" and getgenv()) or _G
+    local requestFn = type(env) == "table" and (env.request or env.http_request) or nil
+    if not requestFn and type(syn) == "table" then requestFn = syn.request end
+    if type(requestFn) == "function" then
+        local rok, response = pcall(requestFn, {Url=url, Method="GET"})
+        if rok and type(response) == "table" and type(response.Body) == "string" and #response.Body > 16 then
+            return response.Body
+        end
+    end
+    return nil
+end
+
 local function resolveExternalImage(value, cacheName, fallback)
     local asset = tostring(value or "")
-    if asset == "" then return fallback or asset end
+    if asset == "" then return fallback or "" end
+    if isImageAsset(asset) then return asset end
 
-    -- Roblox normally wants rbxassetid:// or an executor custom asset for ImageLabel.
-    -- For remote PNG URLs, cache the file and use getcustomasset/getsynasset when available.
-    if string.match(asset, "^https?://") then
+    if asset:match("^https?://") then
         local loader = (typeof(getcustomasset) == "function" and getcustomasset)
             or (typeof(getsynasset) == "function" and getsynasset)
         local canWrite = typeof(writefile) == "function"
@@ -457,21 +486,21 @@ local function resolveExternalImage(value, cacheName, fallback)
             end)
             local okFile = pcall(function()
                 if not isfile(path) or #readfile(path) < 16 then
-                    local body = game:HttpGet(asset)
+                    local body = fetchRemoteBody(asset)
                     assert(type(body) == "string" and #body > 16, "empty image response")
                     writefile(path, body)
                 end
             end)
             if okFile then
                 local okAsset, custom = pcall(loader, path)
-                if okAsset and custom and custom ~= "" then
-                    return custom
-                end
+                if okAsset and isImageAsset(custom) then return custom end
             end
         end
     end
 
-    return fallback or asset
+    -- Never hand a raw HTTPS URL to ImageLabel: executors/Roblox clients commonly
+    -- render that as nothing. The caller can show its text fallback instead.
+    return fallback or ""
 end
 
 local function resolveIcon(value)
@@ -570,7 +599,7 @@ local function createIconElement(parent, iconType, iconValue, size, zindex)
     size = size or 10
     zindex = zindex or 6
     if iconType == "image" then
-        return make("ImageLabel", {
+        local img = make("ImageLabel", {
             Image = iconValue,
             BackgroundTransparency = 1,
             AnchorPoint = Vector2.new(0.5, 0.5),
@@ -581,6 +610,8 @@ local function createIconElement(parent, iconType, iconValue, size, zindex)
             ZIndex = zindex,
             Parent = parent,
         })
+        img:SetAttribute("Theme_ImageColor3", "TextGray")
+        return img
     else
         return make("TextLabel", {
             Text = iconValue or "?",
@@ -951,9 +982,11 @@ local function addTag(player)
     refreshOutline()
     -- Re-apply when character respawns (Highlight is destroyed with the old char)
     local charConn
-    charConn = player.CharacterAdded:Connect(function()
-        task.wait(0.2)
-        applyOutline(player)
+    charConn = player.CharacterAdded:Connect(function(char)
+        task.spawn(function()
+            local hrp = char:WaitForChild("HumanoidRootPart", 3)
+            if hrp and char.Parent then applyOutline(player) end
+        end)
     end)
 
     -- RenderStepped: update position + glow each frame
@@ -1214,7 +1247,7 @@ end
 -- LIBRARY
 -- ════════════════════════════════════════════════════════════════════════════
 local Library = {
-    Version       = "2.7",
+    Version       = "2.8",
     ChatFree      = true,      -- marker: this build has no hub chat (used by the loader to reject stale CDN copies)
     Themes        = THEMES,
     Icons         = ICONS,
@@ -1290,12 +1323,21 @@ end
 
 -- Register an interactive element under a Flag so its value can be read,
 -- written and persisted through the config system.
-local function registerFlag(flag, kind, api)
+local function registerFlag(window, flag, kind, api)
     if flag ~= nil and api then
         local f = tostring(flag)
-        Library.Flags[f] = { kind = kind, api = api }
-        if Library.State[f] ~= nil and api.Set then
-            pcall(function() api:Set(Library.State[f]) end)
+        if window and window._flags then
+            window._flags[f] = { kind = kind, api = api }
+            -- Preserve a global alias only when free, so old Library:Get/Set code keeps working.
+            if Library.Flags[f] == nil then Library.Flags[f] = window._flags[f] end
+            if window._state and window._state[f] ~= nil and api.Set then
+                pcall(function() api:Set(window._state[f]) end)
+            end
+        else
+            Library.Flags[f] = { kind = kind, api = api }
+            if Library.State[f] ~= nil and api.Set then
+                pcall(function() api:Set(Library.State[f]) end)
+            end
         end
     end
     return api
@@ -1438,19 +1480,16 @@ local function configPath(name)
     return Library.ConfigFolder .. "/" .. name .. ".json"
 end
 
-local autoSaveThread = nil
-function Library:QueueAutoSave()
-    if Library._autoSaveDisabled then return end
-    if not hasFileApi() then return end
-    local cfgName = Library._currentConfigName or "autoload"
-
-    if autoSaveThread then
-        pcall(task.cancel, autoSaveThread)
-        autoSaveThread = nil
+local autoSaveThreads = setmetatable({}, {__mode="k"})
+function Library:QueueAutoSave(window)
+    if Library._autoSaveDisabled or type(writefile) ~= "function" or type(readfile) ~= "function" then return end
+    if window and type(window.QueueAutoSave) == "function" then
+        return window:QueueAutoSave()
     end
-
-    autoSaveThread = task.delay(0.6, function()
-        autoSaveThread = nil
+    local cfgName = Library._currentConfigName or "autoload"
+    if autoSaveThreads[Library] then pcall(task.cancel, autoSaveThreads[Library]); autoSaveThreads[Library]=nil end
+    autoSaveThreads[Library] = task.delay(0.6, function()
+        autoSaveThreads[Library] = nil
         pcall(function() Library:SaveConfig(cfgName) end)
     end)
 end
@@ -2439,7 +2478,7 @@ function Library:CreateWindow(opts)
         Padding = UDim.new(0, 5), Parent = fpsFrame
     })
     local fpsIcon = make("ImageLabel", {
-        Name = "FpsIcon", Image = "rbxassetid://91097114340089",
+        Name = "FpsIcon", Image = ICONS.gauge,
         LayoutOrder = 1, ImageColor3 = Color3.fromRGB(75, 215, 125),
         BackgroundTransparency = 1, Size = UDim2.fromOffset(14, 14),
         ResampleMode = Enum.ResamplerMode.Default, ScaleType = Enum.ScaleType.Fit, ZIndex = 202, Parent = fpsFrame
@@ -2476,7 +2515,6 @@ function Library:CreateWindow(opts)
             end
         end
     end)
-
     task.spawn(function()
         while screenGui and screenGui.Parent do
             task.wait(0.5)
@@ -2559,16 +2597,28 @@ function Library:CreateWindow(opts)
     -- The logo holder clips, and the image inside is scaled by `logoZoom`, so
     -- the Akaz mark lands at ~88% of this box without any of it being cut off.
     local logoHolder = make("Frame", {
-        Name="AkazLogoHolder", Position=UDim2.fromOffset(10,10), Size=UDim2.fromOffset(48,44),
+        Name="AkazLogoHolder", Position=UDim2.fromOffset(10,10), Size=UDim2.fromOffset(42,44),
         BackgroundTransparency=1, ClipsDescendants=false, Parent=brand,
     })
     local brandLogo = make("ImageLabel", {
-        Name="Logo", Image=logoAsset, BackgroundTransparency=1,
+        Name="Logo", Image=isImageAsset(logoAsset) and logoAsset or "", BackgroundTransparency=1,
         AnchorPoint=Vector2.new(0.5,0.5), Position=UDim2.fromScale(0.5,0.5),
-        Size=UDim2.fromOffset(44,44), ResampleMode=Enum.ResamplerMode.Default,
-        ScaleType=Enum.ScaleType.Fit, ImageColor3=Color3.fromRGB(255,255,255), ImageTransparency=0,
-        Parent=logoHolder,
+        Size=UDim2.fromOffset(38,38), ResampleMode=Enum.ResamplerMode.Default,
+        ScaleType=Enum.ScaleType.Fit, ImageColor3=C.White, ImageTransparency=0,
+        Visible=isImageAsset(logoAsset), Parent=logoHolder,
     })
+    brandLogo:SetAttribute("Theme_ImageColor3", nil)
+    local brandLogoFallback = make("TextLabel", {
+        Name="LogoFallback", Text="A", Font=Enum.Font.GothamBlack, TextSize=27,
+        TextColor3=C.White, BackgroundTransparency=1, Size=UDim2.fromScale(1,1),
+        TextXAlignment=Enum.TextXAlignment.Center, TextYAlignment=Enum.TextYAlignment.Center,
+        Visible=not isImageAsset(logoAsset), Parent=logoHolder,
+    })
+    make("UIGradient", {Rotation=45, Color=ColorSequence.new({
+        ColorSequenceKeypoint.new(0, Color3.fromRGB(255,255,255)),
+        ColorSequenceKeypoint.new(0.55, C.TextGray),
+        ColorSequenceKeypoint.new(1, Color3.fromRGB(255,255,255)),
+    }), Parent=brandLogoFallback})
     make("TextLabel",{Text=opts.Name or "Akaz Hub",Font=Enum.Font.GothamBold,TextSize=13,TextColor3=C.White,TextXAlignment=Enum.TextXAlignment.Left,TextTruncate=Enum.TextTruncate.AtEnd,BackgroundTransparency=1,Position=UDim2.fromOffset(58,16),Size=UDim2.new(1,-66,0,17),Parent=brand})
     make("TextLabel",{Text=opts.BrandSubtitle or ("AKAZ HUB • v"..Library.Version),Font=Enum.Font.GothamMedium,TextSize=9,TextColor3=C.TextDim,TextXAlignment=Enum.TextXAlignment.Left,TextTruncate=Enum.TextTruncate.AtEnd,BackgroundTransparency=1,Position=UDim2.fromOffset(58,35),Size=UDim2.new(1,-66,0,13),Parent=brand})
 
@@ -2586,13 +2636,14 @@ function Library:CreateWindow(opts)
     make("TextLabel",{Text=lp.DisplayName,Font=Enum.Font.GothamBold,TextSize=12,TextColor3=C.White,TextXAlignment=Enum.TextXAlignment.Left,TextTruncate=Enum.TextTruncate.AtEnd,BackgroundTransparency=1,Position=UDim2.fromOffset(52,8),Size=UDim2.new(1,-60,0,15),Parent=pcard})
     make("TextLabel",{Text="@"..lp.Name,Font=Enum.Font.Gotham,TextSize=10,TextColor3=C.TextDim,TextXAlignment=Enum.TextXAlignment.Left,TextTruncate=Enum.TextTruncate.AtEnd,BackgroundTransparency=1,Position=UDim2.fromOffset(52,27),Size=UDim2.new(1,-60,0,13),Parent=pcard})
 
-    local discordAsset = resolveExternalImage(AKAZ_DISCORD_LOGO_URL, "discord_logo.png", "")
+    local discordAsset = resolveExternalImage(AKAZ_DISCORD_LOGO_URL, "discord_logo.png", ICONS.discordFallback)
     local discordBtn = make("TextButton",{
         Name="DiscordButton",Text="",AutoButtonColor=false,
-        Position=UDim2.fromOffset(12,148),Size=UDim2.new(1,-24,0,28),
+        Position=UDim2.fromOffset(12,150),Size=UDim2.new(1,-24,0,28),
         BackgroundColor3=C.Element,Parent=sidebar,
     })
     corner(discordBtn,7); stroke(discordBtn,C.Border)
+    discordBtn:SetAttribute("Theme_BackgroundColor3", "Element")
     local discordIcon = make("ImageLabel",{
         Image=discordAsset,BackgroundTransparency=1,Position=UDim2.fromOffset(7,5),
         Size=UDim2.fromOffset(18,18),ScaleType=Enum.ScaleType.Fit,
@@ -2692,7 +2743,7 @@ function Library:CreateWindow(opts)
         -- Sits outside the CanvasGroup so the travelling gradient cannot tint it
         -- and make the logo interior show up against the background.
         local watermarkMask = make("ImageLabel", {
-            Name = "WatermarkMask", Image = logoAsset, BackgroundTransparency = 1,
+            Name = "WatermarkMask", Image = isImageAsset(logoAsset) and logoAsset or "", BackgroundTransparency = 1,
             ImageColor3 = C.WindowBg, ImageTransparency = 0,
             AnchorPoint = Vector2.new(0.5, 0.5), Position = UDim2.fromScale(0.5, 0.5),
             Size = UDim2.fromScale(logoZoom, logoZoom),
@@ -2701,7 +2752,7 @@ function Library:CreateWindow(opts)
         watermarkMask:SetAttribute("Theme_ImageColor3", "WindowBg")
     end
 
-    local watermark = make("ImageLabel",{Name="WatermarkImage",Image=logoAsset,BackgroundTransparency=1,ImageTransparency=0.9,AnchorPoint=Vector2.new(0.5,0.5),Position=UDim2.fromScale(0.5,0.5),Size=UDim2.fromScale(logoZoom,logoZoom),ScaleType=Enum.ScaleType.Fit,ZIndex=3,Parent=watermarkHolder})
+    local watermark = make("ImageLabel",{Name="WatermarkImage",Image=isImageAsset(logoAsset) and logoAsset or "",BackgroundTransparency=1,ImageTransparency=0.9,AnchorPoint=Vector2.new(0.5,0.5),Position=UDim2.fromScale(0.5,0.5),Size=UDim2.fromScale(logoZoom,logoZoom),ScaleType=Enum.ScaleType.Fit,ZIndex=3,Visible=isImageAsset(logoAsset),Parent=watermarkHolder})
 
     local divLine=make("Frame",{Position=UDim2.fromOffset(190,0),Size=UDim2.new(0,1,1,0),BackgroundColor3=C.Accent,Parent=main})
     make("UIGradient",{Rotation=90,Transparency=NumberSequence.new({NumberSequenceKeypoint.new(0,1),NumberSequenceKeypoint.new(0.5,0.5),NumberSequenceKeypoint.new(1,1)}),Parent=divLine})
@@ -3369,19 +3420,33 @@ function Library:CreateWindow(opts)
 
     windowRef = setmetatable({
         ScreenGui=screenGui, Main=main, Container=container, Logo=brandLogo, Watermark=watermark,
-        _logoAsset=logoAsset, _hotbar=hotbar, _hotbarInner=hotbarInner, _content=content,
+        _logoAsset=logoAsset, _logoImages={}, _logoFallbacks={}, _hotbar=hotbar, _hotbarInner=hotbarInner, _content=content,
         _notificationHolder=notificationHolder, _notificationOrder=0,
         _profilePanel=profilePanel, _performancePanel=performancePanel,
         _fpsEditableImage=fpsEditableImage, _profileKey=profileKey,
         _profileOpen=profileOpen, _setProfileVisible=setProfileVisible,
-        _connections={}, _noDrag=noDrag, _tabs={}, _activeTab=nil,
+        _connections={}, _noDrag=noDrag, _tabs={}, _activeTab=nil, _flags={}, _state={}, _configName="autoload",
         _containerScale=containerScale, _uiVisible=true, _toggleKey=toggleKey,
         _destroyed=false,
         _clearLoadingBlur=clearLoadingBlur,
     }, Window)
     windowRef.Notify=function(s,m) return Window.Notify(windowRef,s==windowRef and m or s) end
     windowRef.Notification=windowRef.Notify
+    windowRef._brandLogoFallback = brandLogoFallback
+    windowRef._logoImages = {brandLogo, watermark}
+    for _, node in ipairs(watermarkHolder:GetDescendants()) do
+        if node:IsA("ImageLabel") or node:IsA("ImageButton") then table.insert(windowRef._logoImages, node) end
+    end
+    windowRef._logoFallbacks = {brandLogoFallback}
+    local mobileLogo = screenGui:FindFirstChild("AkazMobileToggle")
+    if mobileLogo then
+        local ml = mobileLogo:FindFirstChildOfClass("ImageLabel")
+        local mf = mobileLogo:FindFirstChild("TextLabel")
+        if ml then table.insert(windowRef._logoImages, ml) end
+        if mf then table.insert(windowRef._logoFallbacks, mf) end
+    end
     if dragConn then table.insert(windowRef._connections, dragConn) end
+    table.insert(windowRef._connections, minimizedFpsConn)
     for _,c in ipairs(musicConns) do table.insert(windowRef._connections, c) end
 
     -- Clean up the admin panel's TagSystem listener on Window:Destroy()
@@ -3515,6 +3580,9 @@ function Library:CreateWindow(opts)
         container.Visible = v
         hotbar.Visible = v and not minimized
         if burgerButton then burgerButton.Visible = v and minimized end
+        for _, panel in ipairs({profilePanel, performancePanel, musicPanel, adminPanel, notificationHolder}) do
+            if panel then panel.Visible = v end
+        end
         windowRef._uiVisible = v
         return v
     end
@@ -3529,7 +3597,8 @@ function Library:CreateWindow(opts)
             ZIndex = 60, Parent = screenGui,
         })
         corner(fab, 12); stroke(fab, C.Border)
-        make("ImageLabel", { Image = logoAsset, BackgroundTransparency = 1, AnchorPoint = Vector2.new(0.5, 0.5), Position = UDim2.fromScale(0.5, 0.5), Size = UDim2.fromOffset(26, 26), ResampleMode = Enum.ResamplerMode.Default, ScaleType = Enum.ScaleType.Fit, ZIndex = 61, Parent = fab })
+        local fabLogo = make("ImageLabel", { Image = isImageAsset(logoAsset) and logoAsset or "", BackgroundTransparency = 1, AnchorPoint = Vector2.new(0.5, 0.5), Position = UDim2.fromScale(0.5, 0.5), Size = UDim2.fromOffset(26, 26), ResampleMode = Enum.ResamplerMode.Default, ScaleType = Enum.ScaleType.Fit, Visible = isImageAsset(logoAsset), ZIndex = 61, Parent = fab })
+        local fabFallback = make("TextLabel", { Text="A", Font=Enum.Font.GothamBlack, TextSize=18, TextColor3=C.White, BackgroundTransparency=1, Size=UDim2.fromScale(1,1), TextXAlignment=Enum.TextXAlignment.Center, TextYAlignment=Enum.TextYAlignment.Center, Visible=not isImageAsset(logoAsset), ZIndex=61, Parent=fab })
         local fabDrag = makeDraggable(fab, {})
         if fabDrag then table.insert(windowRef._connections, fabDrag) end
         -- distinguish a tap (toggle) from a drag (move) using a movement threshold
@@ -3578,13 +3647,14 @@ function Library:CreateWindow(opts)
     end
 
     local cfgName = opts.ConfigName or (opts.Name and tostring(opts.Name):gsub("[^%w%-_]", ""):lower()) or tostring(game.PlaceId)
+    windowRef._configName = cfgName
     Library._currentConfigName = cfgName
 
     if opts.AutoLoad ~= false then
         task.defer(function()
             task.wait(0.6)
-            if hasFileApi() then
-                pcall(function() Library:LoadConfig(cfgName) end)
+            if hasFileApi() and screenGui.Parent then
+                pcall(function() windowRef:LoadConfig(cfgName) end)
             end
         end)
     end
@@ -3598,8 +3668,71 @@ end
 function Window:SetState(key, val) return Library:SetState(key, val) end
 function Window:GetState(key, default) return Library:GetState(key, default) end
 function Window:BindState(key, fn) return Library:BindState(key, fn) end
-function Window:Get(flag, default) return Library:Get(flag, default) end
-function Window:Set(flag, value) return Library:Set(flag, value) end
+function Window:Get(flag, default)
+    local entry = self._flags and self._flags[tostring(flag)]
+    if entry and entry.api and entry.api.Get then
+        local ok, value = pcall(entry.api.Get, entry.api)
+        if ok and value ~= nil then return value end
+    end
+    return default
+end
+function Window:Set(flag, value)
+    local entry = self._flags and self._flags[tostring(flag)]
+    if entry and entry.api and entry.api.Set then
+        pcall(entry.api.Set, entry.api, value)
+        return true
+    end
+    return false
+end
+function Window:GetConfig()
+    local data = {__version="2.8", __meta={theme=Library._currentTheme, scale=self:GetScale()}}
+    for flag, entry in pairs(self._flags or {}) do
+        local ok, value
+        if entry.kind == "color" and entry.api.GetHex then ok, value=pcall(entry.api.GetHex, entry.api)
+        elseif entry.api.Get then ok, value=pcall(entry.api.Get, entry.api) end
+        if ok and value ~= nil then
+            if entry.kind == "keybind" then data[flag]=(typeof(value)=="EnumItem") and value.Name or false
+            else data[flag]=value end
+        end
+    end
+    return data
+end
+function Window:SaveConfig(name)
+    if not hasFileApi() then return false end
+    ensureConfigFolder()
+    local ok, encoded = pcall(function() return HttpService:JSONEncode(self:GetConfig()) end)
+    if not ok then return false end
+    return pcall(writefile, configPath(name or self._configName or "autoload"), encoded)
+end
+function Window:LoadConfig(name)
+    if not hasFileApi() then return false end
+    local path=configPath(name or self._configName or "autoload")
+    if type(isfile)=="function" and not isfile(path) then return false end
+    local ok, raw=pcall(readfile,path); if not ok or not raw then return false end
+    local decoded, data=pcall(function() return HttpService:JSONDecode(raw) end)
+    if not decoded or type(data)~="table" then return false end
+    Library._autoSaveDisabled=true
+    for flag,value in pairs(data) do
+        local entry=self._flags and self._flags[tostring(flag)]
+        if entry and entry.api and entry.api.Set then
+            if entry.kind=="keybind" then
+                local key=nil; if type(value)=="string" then pcall(function() key=Enum.KeyCode[value] end) end
+                pcall(entry.api.Set,entry.api,key)
+            elseif not tostring(flag):match("^__") then pcall(entry.api.Set,entry.api,value) end
+        end
+    end
+    task.delay(0.2,function() Library._autoSaveDisabled=false end)
+    return true
+end
+function Window:QueueAutoSave()
+    if Library._autoSaveDisabled or not hasFileApi() then return end
+    local key=self
+    if autoSaveThreads[key] then pcall(task.cancel,autoSaveThreads[key]); autoSaveThreads[key]=nil end
+    autoSaveThreads[key]=task.delay(0.6,function()
+        autoSaveThreads[key]=nil
+        pcall(function() self:SaveConfig(self._configName or "autoload") end)
+    end)
+end
 
 function Window:SetVisible(v) self.ScreenGui.Enabled = v==true end
 function Window:Toggle() self.ScreenGui.Enabled = not self.ScreenGui.Enabled; return self.ScreenGui.Enabled end
@@ -3624,9 +3757,25 @@ function Window:SetProfileVisible(v)
 end
 function Window:ToggleProfile() return self:SetProfileVisible(not self._profileOpen) end
 function Window:SetLogo(id)
-    self._logoAsset=normalizeAssetId(id)
-    if self.Logo then self.Logo.Image=self._logoAsset end
-    if self.Watermark then self.Watermark.Image=self._logoAsset end
+    local source = id or DEFAULT_LOGO
+    local asset = resolveExternalImage(source, "akaz_logo.png", normalizeAssetId(source))
+    local usable = isImageAsset(asset)
+    self._logoAsset = asset
+    if self.Logo then self.Logo.Image = usable and asset or ""; self.Logo.Visible = usable end
+    local fallback = self._brandLogoFallback
+    if fallback then fallback.Visible = not usable end
+    if self.Watermark then self.Watermark.Image = usable and asset or ""; self.Watermark.Visible = usable end
+    for _, img in ipairs(self._logoImages or {}) do
+        if img and img.Parent and img ~= self.Logo and img ~= self.Watermark then
+            if img:IsA("ImageLabel") or img:IsA("ImageButton") then
+                img.Image = usable and asset or ""
+                img.Visible = usable
+            end
+        end
+    end
+    for _, fb in ipairs(self._logoFallbacks or {}) do
+        if fb and fb.Parent then fb.Visible = not usable end
+    end
     return self._logoAsset
 end
 
@@ -3685,7 +3834,8 @@ function Window:Notify(opts)
     -- Style icon chip
     local iconHolder=make("Frame",{Position=UDim2.fromOffset(14,17),Size=UDim2.fromOffset(28,28),BackgroundColor3=style.Color,BackgroundTransparency=0.88,ZIndex=202,Parent=card})
     corner(iconHolder,8)
-    make("ImageLabel",{Image=style.Icon or ICONS.alert,ImageColor3=C.White,BackgroundTransparency=1,AnchorPoint=Vector2.new(0.5,0.5),Position=UDim2.fromScale(0.5,0.5),Size=UDim2.fromOffset(15,15),ScaleType=Enum.ScaleType.Fit,ZIndex=203,Parent=iconHolder})
+    local noticeIcon = make("ImageLabel",{Image=style.Icon or ICONS.alert,ImageColor3=C.White,BackgroundTransparency=1,AnchorPoint=Vector2.new(0.5,0.5),Position=UDim2.fromScale(0.5,0.5),Size=UDim2.fromOffset(15,15),ScaleType=Enum.ScaleType.Fit,ZIndex=203,Parent=iconHolder})
+    noticeIcon:SetAttribute("Theme_ImageColor3", "White")
     make("TextLabel",{Text=title,Font=Enum.Font.GothamBold,TextSize=12,TextColor3=style.Color,TextXAlignment=Enum.TextXAlignment.Left,TextTruncate=Enum.TextTruncate.AtEnd,BackgroundTransparency=1,Position=UDim2.fromOffset(52,8),Size=UDim2.new(1,-84,0,16),ZIndex=202,Parent=card})
     make("TextLabel",{Text=body,Font=Enum.Font.Gotham,TextSize=11,TextColor3=C.TextGray,TextXAlignment=Enum.TextXAlignment.Left,TextYAlignment=Enum.TextYAlignment.Top,TextWrapped=true,BackgroundTransparency=1,Position=UDim2.fromOffset(52,27),Size=UDim2.new(1,-64,0,26),ZIndex=202,Parent=card})
     local xb=make("TextButton",{Text="×",Font=Enum.Font.Gotham,TextSize=14,TextColor3=C.TextDim,AnchorPoint=Vector2.new(1,0),Position=UDim2.new(1,-7,0,5),Size=UDim2.fromOffset(20,20),BackgroundTransparency=1,ZIndex=204,Parent=card})
@@ -3792,7 +3942,7 @@ function Window:AddTab(opts)
 
     local headerBadge=make("Frame",{Size=UDim2.fromOffset(32,32),Position=UDim2.fromOffset(14,14),BackgroundTransparency=1,Parent=header})
     local headerIconElement = createIconElement(headerBadge, iconType, iconValue, 26, 3)
-    if headerIconElement:IsA("ImageLabel") then headerIconElement.ImageColor3=C.White
+    if headerIconElement:IsA("ImageLabel") then headerIconElement.ImageColor3=C.White; headerIconElement:SetAttribute("Theme_ImageColor3","White")
     elseif headerIconElement:IsA("TextLabel") then headerIconElement.TextColor3=C.White end
 
     make("TextLabel",{Text=name,Font=Enum.Font.GothamBold,TextSize=14,TextColor3=C.White,TextXAlignment=Enum.TextXAlignment.Left,BackgroundTransparency=1,Position=UDim2.fromOffset(54,17),Size=UDim2.new(1,-70,0,14),Parent=header})
@@ -3983,9 +4133,9 @@ function SubTab:AddToggle(opts)
         end
         if a then tween(knob,{Position=kp}) else knob.Position=kp end
     end
-    local function set(v) v=v==true; if v==value then return end; value=v; render(true); fire(opts.Callback,value); Library:QueueAutoSave() end
+    local function set(v) v=v==true; if v==value then return end; value=v; render(true); fire(opts.Callback,value); self._window:QueueAutoSave() end
     pill.MouseButton1Click:Connect(function() set(not value) end); render(false)
-    return registerFlag(opts.Flag, "toggle", {Set=function(_,v) set(v) end, Get=function() return value end})
+    return registerFlag(self._window, opts.Flag, "toggle", {Set=function(_,v) set(v) end, Get=function() return value end})
 end
 
 function SubTab:AddButton(opts)
@@ -4046,7 +4196,7 @@ function SubTab:AddKeybind(opts)
         if k~=nil and typeof(k)~="EnumItem" then return end
         key=k; btn.Text=key and key.Name or "None"
         if opts.OnKeyChanged then fire(opts.OnKeyChanged,key) end
-        Library:QueueAutoSave()
+        self._window:QueueAutoSave()
     end
     local function stopListening()
         listening=false
@@ -4076,7 +4226,7 @@ function SubTab:AddKeybind(opts)
     end)
     table.insert(self._window._noDrag,btn)
     trackConn(self._window, pressConn)
-    return registerFlag(opts.Flag, "keybind", {Set=function(_,k) setKey(k) end, Get=function() return key end, _connections={pressConn}})
+    return registerFlag(self._window, opts.Flag, "keybind", {Set=function(_,k) setKey(k) end, Get=function() return key end, _connections={pressConn}})
 end
 
 function SubTab:AddInput(opts)
@@ -4086,8 +4236,8 @@ function SubTab:AddInput(opts)
     corner(holder,6)
     local box=make("TextBox",{Text=opts.Default or "",PlaceholderText=opts.Placeholder or "...",PlaceholderColor3=C.Placeholder,Font=Enum.Font.Gotham,TextSize=12,TextColor3=C.TextGray,TextXAlignment=Enum.TextXAlignment.Left,BackgroundTransparency=1,ClearTextOnFocus=false,ClipsDescendants=true,Position=UDim2.fromOffset(8,0),Size=UDim2.new(1,-30,1,0),Parent=holder})
     inputIcon(holder)
-    box.FocusLost:Connect(function(ep) fire(opts.Callback,box.Text,ep); Library:QueueAutoSave() end)
-    return registerFlag(opts.Flag, "input", {Set=function(_,t) box.Text=tostring(t) end, Get=function() return box.Text end})
+    box.FocusLost:Connect(function(ep) fire(opts.Callback,box.Text,ep); self._window:QueueAutoSave() end)
+    return registerFlag(self._window, opts.Flag, "input", {Set=function(_,t) box.Text=tostring(t) end, Get=function() return box.Text end})
 end
 
 function SubTab:AddDropdown(opts)
@@ -4136,7 +4286,7 @@ function SubTab:AddDropdown(opts)
                 autoOrder(ob2);corner(ob2,4);make("UIPadding",{PaddingLeft=UDim.new(0,8),Parent=ob2}); ob2.TextXAlignment=Enum.TextXAlignment.Left
                 ob2.MouseEnter:Connect(function() tween(ob2,{BackgroundColor3=C.ElementHover,TextColor3=C.White}) end)
                 ob2.MouseLeave:Connect(function() tween(ob2,{BackgroundColor3=C.Element,TextColor3=C.TextGray}) end)
-                ob2.MouseButton1Click:Connect(function() value=o; vl.Text=os; closeDD(); fire(opts.Callback,o); Library:QueueAutoSave() end)
+                ob2.MouseButton1Click:Connect(function() value=o; vl.Text=os; closeDD(); fire(opts.Callback,o); self._window:QueueAutoSave() end)
                 table.insert(ob,ob2)
             end
         end
@@ -4164,8 +4314,8 @@ function SubTab:AddDropdown(opts)
     btn.MouseButton1Click:Connect(function() setOpen(not open) end)
     btn.MouseEnter:Connect(function() tween(btn,{BackgroundColor3=C.ElementHover}) end)
     btn.MouseLeave:Connect(function() tween(btn,{BackgroundColor3=C.Element}) end)
-    return registerFlag(opts.Flag, "dropdown", {
-        Set=function(_,o) value=o; vl.Text=tostring(o); fire(opts.Callback,o); Library:QueueAutoSave() end, Get=function() return value end,
+    return registerFlag(self._window, opts.Flag, "dropdown", {
+        Set=function(_,o) value=o; vl.Text=tostring(o); fire(opts.Callback,o); self._window:QueueAutoSave() end, Get=function() return value end,
         SetOptions=function(_,no)
             co=no or {}; local se=false
             for _,o in ipairs(co) do if o==value then se=true; break end end
@@ -4243,7 +4393,7 @@ function SubTab:AddMultiDropdown(opts)
                     selected[o]=not selected[o] or nil
                     box.BackgroundColor3=selected[o] and C.White or C.Badge
                     check.Visible=selected[o]==true
-                    updateSummary(); fire(opts.Callback,selectedList()); Library:QueueAutoSave()
+                    updateSummary(); fire(opts.Callback,selectedList()); self._window:QueueAutoSave()
                 end)
                 table.insert(ob,ob2)
             end
@@ -4272,11 +4422,11 @@ function SubTab:AddMultiDropdown(opts)
     btn.MouseButton1Click:Connect(function() setOpen(not open) end)
     btn.MouseEnter:Connect(function() tween(btn,{BackgroundColor3=C.ElementHover}) end)
     btn.MouseLeave:Connect(function() tween(btn,{BackgroundColor3=C.Element}) end)
-    return registerFlag(opts.Flag, "multidropdown", {
+    return registerFlag(self._window, opts.Flag, "multidropdown", {
         Set=function(_,sel)
             table.clear(selected)
             if type(sel)=="table" then for _,o in ipairs(sel) do selected[o]=true end end
-            rebuild(); updateSummary(); fire(opts.Callback,selectedList()); Library:QueueAutoSave()
+            rebuild(); updateSummary(); fire(opts.Callback,selectedList()); self._window:QueueAutoSave()
         end,
         Get=function() return selectedList() end,
         SetOptions=function(_,no)
@@ -4325,7 +4475,7 @@ function SubTab:AddSlider(opts)
         local pct=mx>mn and (value-mn)/(mx-mn) or 0; vl.Text=tostring(value)..sf
         if a then tween(fill,{Size=UDim2.new(pct,0,1,0)}); tween(knob,{Position=UDim2.new(pct,0,0.5,0)})
         else fill.Size=UDim2.new(pct,0,1,0); knob.Position=UDim2.new(pct,0,0.5,0) end
-        if fc then fire(opts.Callback,value); Library:QueueAutoSave() end
+        if fc then fire(opts.Callback,value); self._window:QueueAutoSave() end
     end
     local function fromX(x) return mn+(mx-mn)*math.clamp((x-track.AbsolutePosition.X)/math.max(track.AbsoluteSize.X,1),0,1) end
     local dragging=false
@@ -4333,7 +4483,7 @@ function SubTab:AddSlider(opts)
     trackConn(self._window, UserInputService.InputChanged:Connect(function(i) if dragging and (i.UserInputType==Enum.UserInputType.MouseMovement or i.UserInputType==Enum.UserInputType.Touch) then apply(fromX(i.Position.X),true,true) end end))
     trackConn(self._window, UserInputService.InputEnded:Connect(function(i) if i.UserInputType==Enum.UserInputType.MouseButton1 or i.UserInputType==Enum.UserInputType.Touch then dragging=false end end))
     apply(value,false,false)
-    return registerFlag(opts.Flag, "slider", {Set=function(_,v) apply(v,true,true) end, Get=function() return value end})
+    return registerFlag(self._window, opts.Flag, "slider", {Set=function(_,v) apply(v,true,true) end, Get=function() return value end})
 end
 
 local function hsvToColor(h,s,v) return Color3.fromHSV(h,s,v) end
@@ -4392,7 +4542,7 @@ function SubTab:AddColorPicker(opts)
     end
     local function recompute(fc,a)
         value=hsvToColor(h,s,v); applyVisuals(a)
-        if fc then fire(opts.Callback,value); Library:QueueAutoSave() end
+        if fc then fire(opts.Callback,value); self._window:QueueAutoSave() end
     end
 
     local svDragging=false; local hueDragging=false
@@ -4454,7 +4604,7 @@ function SubTab:AddColorPicker(opts)
     recompute(false,false)
     trackConn(self._window, moveConn)
     trackConn(self._window, endConn)
-    return registerFlag(opts.Flag, "color", {
+    return registerFlag(self._window, opts.Flag, "color", {
         Set=function(_,c)
             c=(typeof(c)=="Color3" and c) or hexToColor(c)
             if not c then return end

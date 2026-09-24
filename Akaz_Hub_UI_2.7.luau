@@ -10,11 +10,11 @@ local HttpService      = game:GetService("HttpService")
 local SoundService     = game:GetService("SoundService")
 local Workspace        = game:GetService("Workspace")
 
-local AKAZ_LOGO_URL = "https://raw.githubusercontent.com/Yns095/AkazUI-2/main/image-removebg-preview%20(1).png"
+local AKAZ_LOGO_URL = "rbxassetid://91555718992391"
 -- Roblox ImageLabel normally expects an uploaded Roblox asset id (or an executor-local
--- custom asset). Keep the GitHub URL as the source reference, but set DEFAULT_LOGO to
--- an rbxassetid://... value in production when the PNG has been uploaded to Roblox.
-local AKAZ_DISCORD_LOGO_URL = "https://raw.githubusercontent.com/Yns095/AkazUI-2/main/image-removebg-preview%20(2).png"
+-- custom asset). -- The supplied Roblox image assets are used directly so ImageLabel can render them reliably.
+-- Akaz logo: 91555718992391 | Discord logo: 133801393445445
+local AKAZ_DISCORD_LOGO_URL = "rbxassetid://133801393445445"
 local DISCORD_INVITE_URL = "https://discord.gg/PCep5XRFS4"
 local DEFAULT_LOGO = AKAZ_LOGO_URL
 local TWEEN = TweenInfo.new(0.15, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
@@ -2015,14 +2015,14 @@ function Library:CreateWindow(opts)
     startTagSystem()
 
     local logoSource     = opts.Logo or DEFAULT_LOGO
-    local logoAsset      = resolveExternalImage(logoSource, "akaz_logo.png", normalizeAssetId(logoSource))
+    local logoAsset      = normalizeAssetId(logoSource)
     -- Zoom factor applied to the logo inside its clipping holder. The Akaz asset
     -- is a square canvas whose mark covers ~71% of the width and ~80% of the
     -- height, so 1.1 lands it at ~88% of the holder without cropping any of it
     -- (the old padded asset needed 2.4 for the same visual size). Callers with
     -- their own asset get no zoom, since those are assumed cropped already;
     -- `LogoZoom` overrides either case.
-    local logoZoom       = math.clamp(tonumber(opts.LogoZoom) or (logoSource == DEFAULT_LOGO and 1.1 or 1), 1, 6)
+    local logoZoom       = math.clamp(tonumber(opts.LogoZoom) or 1.0, 1, 6)
     local windowSize     = opts.Size or UDim2.fromOffset(700, 490)
     local windowPosition = opts.Position or UDim2.fromScale(0.5, 0.5)
     local guiName        = opts.GuiName or "AkazHubUI"
@@ -2636,10 +2636,11 @@ function Library:CreateWindow(opts)
     make("TextLabel",{Text=lp.DisplayName,Font=Enum.Font.GothamBold,TextSize=12,TextColor3=C.White,TextXAlignment=Enum.TextXAlignment.Left,TextTruncate=Enum.TextTruncate.AtEnd,BackgroundTransparency=1,Position=UDim2.fromOffset(52,8),Size=UDim2.new(1,-60,0,15),Parent=pcard})
     make("TextLabel",{Text="@"..lp.Name,Font=Enum.Font.Gotham,TextSize=10,TextColor3=C.TextDim,TextXAlignment=Enum.TextXAlignment.Left,TextTruncate=Enum.TextTruncate.AtEnd,BackgroundTransparency=1,Position=UDim2.fromOffset(52,27),Size=UDim2.new(1,-60,0,13),Parent=pcard})
 
-    local discordAsset = resolveExternalImage(AKAZ_DISCORD_LOGO_URL, "discord_logo.png", ICONS.discordFallback)
+    local discordAsset = normalizeAssetId(AKAZ_DISCORD_LOGO_URL)
+    -- Discord is intentionally a separate control below PlayerCard, not inside the nametag/card.
     local discordBtn = make("TextButton",{
         Name="DiscordButton",Text="",AutoButtonColor=false,
-        Position=UDim2.fromOffset(12,150),Size=UDim2.new(1,-24,0,28),
+        Position=UDim2.fromOffset(12,148),Size=UDim2.new(1,-24,0,28),
         BackgroundColor3=C.Element,Parent=sidebar,
     })
     corner(discordBtn,7); stroke(discordBtn,C.Border)
@@ -3758,7 +3759,7 @@ end
 function Window:ToggleProfile() return self:SetProfileVisible(not self._profileOpen) end
 function Window:SetLogo(id)
     local source = id or DEFAULT_LOGO
-    local asset = resolveExternalImage(source, "akaz_logo.png", normalizeAssetId(source))
+    local asset = normalizeAssetId(source)
     local usable = isImageAsset(asset)
     self._logoAsset = asset
     if self.Logo then self.Logo.Image = usable and asset or ""; self.Logo.Visible = usable end
